@@ -1,10 +1,11 @@
 /**
- * Purpose: Public landing — simple words, light-mode control, and a map of CRAFT.
+ * Purpose: Public landing — filled hero, map as the second section, dual themes.
  * Inputs: none.
- * Outputs: hero, path map with photos, short close.
+ * Outputs: two-column hero, pictured CRAFT map, short close.
  */
 import Link from "next/link";
 import { BrandMark } from "@/components/brand/mark";
+import { HeroCollage } from "@/components/brand/hero-collage";
 import { StudioMap } from "@/components/brand/studio-map";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ const CRAFTS = [
 ];
 
 /**
- * Marketing home. Plain language first. The map shows every path.
+ * Marketing home. The map is the second thing you meet, not buried.
  */
 export default function HomePage() {
   const marquee = [...CRAFTS, ...CRAFTS];
@@ -43,32 +44,41 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-12 px-4 pb-16 pt-4 md:gap-20 md:px-8 md:pb-24 md:pt-10">
-        <section className="rise max-w-3xl">
-          <p className="mb-4 text-xs font-medium uppercase tracking-[0.28em] text-primary">
-            For Kenyan creatives on PayPal
-          </p>
-          <h1 className="font-serif text-[clamp(2.4rem,10vw,6.4rem)] leading-[0.95] tracking-tight">
-            Get paid.
-            <br />
-            Keep the <span className="italic text-primary">proof</span>.
-          </h1>
-          <p className="rise-2 mt-6 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
-            CRAFT is a simple studio for people who make things. Send a PayPal bill, save
-            proof of the work, and know what to do if PayPal holds your money.
-          </p>
-          <div className="rise-3 mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <Link href="/signup">Create a free studio</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/login">I already have one</Link>
-            </Button>
+      <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-10 px-4 pb-16 pt-2 md:gap-14 md:px-8 md:pb-24 md:pt-4">
+        <section className="rise grid items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
+          <div className="min-w-0">
+            <p className="mb-4 text-xs font-medium uppercase tracking-[0.28em] text-primary">
+              For Kenyan creatives on PayPal
+            </p>
+            <h1 className="font-serif text-[clamp(2.4rem,9vw,5.6rem)] leading-[0.95] tracking-tight">
+              Get paid.
+              <br />
+              Keep the <span className="italic text-primary">proof</span>.
+            </h1>
+            <p className="rise-2 mt-5 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
+              CRAFT is a simple studio for people who make things. Send a PayPal bill, save
+              proof of the work, and know what to do if PayPal holds your money.
+            </p>
+            <div className="rise-3 mt-7 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link href="/signup">Create a free studio</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/login">I already have one</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="rise-2 min-w-0">
+            <HeroCollage />
           </div>
         </section>
 
-        <section className="rise-4 marquee py-1" aria-hidden="true">
-          <div className="marquee-track font-display text-xs uppercase tracking-[0.28em] text-foreground/35 md:text-sm">
+        <div className="rise-4 min-w-0">
+          <StudioMap />
+        </div>
+
+        <section className="rise-5 marquee py-2" aria-hidden="true">
+          <div className="marquee-track font-display text-xs uppercase tracking-[0.28em] text-foreground/40 md:text-sm">
             {marquee.map((craft, index) => (
               <span key={`${craft}-${index}`} className="flex items-center gap-8">
                 {craft}
@@ -77,10 +87,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        <div className="rise-5 min-w-0">
-          <StudioMap />
-        </div>
 
         <section className="glass overflow-hidden rounded-[28px] px-5 py-8 md:rounded-[32px] md:px-14 md:py-14">
           <p className="text-xs uppercase tracking-[0.28em] text-teal">In short</p>
