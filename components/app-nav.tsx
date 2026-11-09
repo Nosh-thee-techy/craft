@@ -57,9 +57,9 @@ export function AppNav({ userName }: AppNavProps) {
         <SignOut userName={userName} />
       </aside>
 
-      <div className="glass flex items-center gap-3 overflow-x-auto rounded-[22px] p-2 md:hidden">
-        <BrandMark href="/dashboard" size="sm" className="shrink-0 px-2" />
-        <nav className="flex min-w-0 flex-1 gap-1">
+      <div className="glass flex max-w-full items-center gap-1 overflow-x-auto rounded-[22px] p-2 md:hidden">
+        <BrandMark href="/dashboard" size="sm" className="shrink-0 px-1" />
+        <nav className="flex min-w-0 flex-1 gap-0.5">
           {LINKS.map((link) => (
             <NavLink key={link.href} {...link} compact active={isActive(pathname, link.href)} />
           ))}
@@ -87,16 +87,19 @@ function NavLink({ href, label, icon: Icon, active, compact }: NavLinkProps) {
   return (
     <Link
       href={href}
+      aria-label={label}
       className={cn(
         "inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm transition",
-        compact && "shrink-0",
+        compact && "shrink-0 px-2.5",
         active
           ? "bg-primary/18 text-primary"
           : "text-muted-foreground hover:bg-foreground/8 hover:text-foreground",
       )}
     >
       <Icon className="size-4 shrink-0" strokeWidth={1.7} />
-      <span className={cn(compact && "whitespace-nowrap")}>{label}</span>
+      <span className={cn(compact ? "hidden sm:inline sm:whitespace-nowrap" : undefined)}>
+        {label}
+      </span>
     </Link>
   );
 }

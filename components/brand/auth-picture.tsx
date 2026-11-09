@@ -14,11 +14,11 @@ type AuthPictureProps = {
  * The door into the studio — a Nairobi photographer at work, no logos, no UI chrome.
  */
 export function AuthPicture({
-  caption = "The work is loud. The proof should be too.",
+  caption = "Get paid. Keep the proof.",
   className,
 }: AuthPictureProps) {
   return (
-    <aside className={className ?? "relative h-56 overflow-hidden lg:h-auto lg:min-h-full"}>
+    <aside className={className ?? "relative h-36 overflow-hidden sm:h-44 lg:h-auto lg:min-h-full"}>
       <Image
         src="/auth/studio-door.jpg"
         alt="A photographer working in a sunlit Nairobi studio"

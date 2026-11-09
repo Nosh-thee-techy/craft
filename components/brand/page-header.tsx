@@ -24,8 +24,8 @@ export function PageHeader({ kicker, title, lede, action }: PageHeaderProps) {
             {kicker}
           </p>
         ) : null}
-        <h1 className="font-display text-4xl leading-none tracking-tight md:text-5xl">{title}</h1>
-        {lede ? <p className="mt-3 max-w-xl text-base text-muted-foreground">{lede}</p> : null}
+        <h1 className="font-display text-3xl leading-none tracking-tight md:text-5xl">{title}</h1>
+        {lede ? <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">{lede}</p> : null}
       </div>
       {action}
     </div>

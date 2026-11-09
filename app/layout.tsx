@@ -32,9 +32,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRAFT — proof as beautiful as the work",
+  title: "CRAFT — get paid, keep the proof",
   description:
-    "Creators' Records, Assurance, Funds & Trust. A PayPal studio for Kenyan creatives: get paid, prove the work, survive a freeze, plan the money.",
+    "A simple PayPal studio for Kenyan creatives. Send a bill, save proof of the work, and know what to do if PayPal holds your money.",
 };
 
 /**
@@ -49,10 +49,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${outfit.variable} ${syne.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="relative min-h-full bg-background font-sans text-foreground">
+      <body className="relative min-h-dvh min-w-0 overflow-x-clip bg-background font-sans text-foreground">
         <ThemeProvider>
           <Atmosphere />
-          <div className="relative z-10 min-h-full">{children}</div>
+          <div className="relative z-10 min-h-dvh min-w-0">{children}</div>
         </ThemeProvider>
       </body>
     </html>

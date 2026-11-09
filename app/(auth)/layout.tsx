@@ -15,16 +15,16 @@ export default function AuthLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <div className="grid min-h-full lg:grid-cols-2">
+    <div className="grid min-h-dvh min-w-0 lg:grid-cols-2">
       <AuthPicture />
-      <section className="relative flex min-h-full flex-col">
-        <header className="flex items-center justify-between px-6 py-5 md:px-10">
+      <section className="relative flex min-h-0 min-w-0 flex-col">
+        <header className="flex items-center justify-between gap-3 px-4 py-4 md:px-10 md:py-5">
           <BrandMark />
-          <ThemeToggle />
+          <ThemeToggle labeled />
         </header>
-        <div className="flex flex-1 flex-col justify-center px-6 py-10 md:px-14">
-          <p className="rise mb-6 max-w-sm text-sm text-muted-foreground">
-            Step into the studio. The work stays yours.
+        <div className="flex flex-1 flex-col justify-center px-4 py-6 md:px-14 md:py-10">
+          <p className="rise mb-5 max-w-sm text-sm text-muted-foreground">
+            Sign in. Your work stays yours.
           </p>
           <div className="rise-2 w-full max-w-md">{children}</div>
         </div>

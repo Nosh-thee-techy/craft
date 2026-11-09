@@ -22,9 +22,9 @@ export default async function AppLayout({
   const userName = session.user.name ?? session.user.email ?? "Creative";
 
   return (
-    <div className="flex min-h-full flex-col gap-3 p-3 md:flex-row md:p-4">
+    <div className="flex min-h-dvh min-w-0 flex-col gap-2 p-2 md:h-dvh md:flex-row md:gap-3 md:overflow-hidden md:p-4">
       <AppNav userName={userName} />
-      <main className="studio-floor min-h-[calc(100vh-1.5rem)] flex-1 overflow-auto rounded-[28px] p-5 md:p-10">
+      <main className="studio-floor min-h-0 min-w-0 flex-1 overflow-auto rounded-[22px] p-4 md:rounded-[28px] md:p-10">
         {children}
       </main>
     </div>

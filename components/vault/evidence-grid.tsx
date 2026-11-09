@@ -81,7 +81,7 @@ export function EvidenceGrid({ rows }: EvidenceGridProps) {
 
   return (
     <AgGridProvider modules={modules}>
-      <div className="glass h-[420px] w-full overflow-hidden rounded-[28px]">
+      <div className="glass h-[min(22rem,55dvh)] w-full min-w-0 overflow-hidden rounded-[24px] md:h-[420px] md:rounded-[28px]">
         <AgGridReact<EvidenceRow>
           theme={craftTheme}
           rowData={rows}
