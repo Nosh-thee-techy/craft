@@ -35,6 +35,7 @@ export function Atmosphere() {
       <div className="orb orb-gold" />
       <div className="orb orb-rose" />
       <div className="orb orb-teal" />
+      <div className="orb orb-gold orb-extra" />
     </div>
   );
 }
