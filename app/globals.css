@@ -103,6 +103,8 @@
 html,
 body {
   min-height: 100%;
+  min-height: 100dvh;
+  overflow-x: clip;
 }
 
 body {
@@ -278,6 +280,33 @@ body::before {
 }
 .rise-5 {
   animation-delay: 0.45s;
+}
+
+@media (min-width: 768px) {
+  .studio-map-start {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .studio-map-pay {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .studio-map-vault {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .studio-map-trust {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  .studio-map-freeze {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .studio-map-money {
+    grid-column: 1;
+    grid-row: 2;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
