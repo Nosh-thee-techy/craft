@@ -26,7 +26,7 @@ Built for the PayPal AI Hackathon. Phase 0 is the blank, authenticated app. Feat
 
    Put the printed value in `AUTH_SECRET`. Keep `APP_URL=http://localhost:3000`.
 
-2. Start Postgres (pgvector image):
+2. Start Postgres (pgvector image on host port **5433**, so it does not collide with another local Postgres on 5432):
 
    ```bash
    docker compose up -d
@@ -36,7 +36,6 @@ Built for the PayPal AI Hackathon. Phase 0 is the blank, authenticated app. Feat
 
    ```bash
    npm install
-   npm run db:generate
    npm run db:migrate
    npm run dev
    ```
@@ -72,6 +71,18 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 The income stability and trust score is **not** a credit score. Investing, when it lands, is educational and simulated.
 
+## Deploy (Render)
+
+The hackathon needs a public URL so PayPal sandbox webhooks can reach `/api/paypal/webhook`.
+
+1. In the [Render dashboard](https://dashboard.render.com), create a **Blueprint** from this repo (`render.yaml`) or a Node web service plus a Postgres 16 database.
+2. Set `APP_URL` to the public `https://….onrender.com` URL after the first deploy.
+3. Leave `PAYPAL_ENV=sandbox`. Add PayPal / LLM / storage keys when those phases start.
+4. Render runs `node scripts/migrate.mjs && npm start` on boot.
+
+Until a Render account is connected, the app runs locally at `http://localhost:3000`.
+
 ## Licence
 
 MIT. See `LICENSE`.
+

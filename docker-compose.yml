@@ -9,7 +9,8 @@ services:
       POSTGRES_PASSWORD: craft
       POSTGRES_DB: craft
     ports:
-      - "5432:5432"
+      # Host 5432 is already taken by a local Postgres. Use 5433 for CRAFT.
+      - "5433:5432"
     volumes:
       - craft_pg:/var/lib/postgresql/data
     healthcheck:

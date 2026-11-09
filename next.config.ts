@@ -13,6 +13,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: false,
   turbopack: {
+    // WHY: a package-lock.json exists in the parent home directory; pin the
+    // workspace root so Next does not walk outside this repo.
+    root: process.cwd(),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],

@@ -10,7 +10,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://craft:craft@localhost:5432/craft",
+    url: process.env.DATABASE_URL ?? "postgres://craft:craft@127.0.0.1:5433/craft",
   },
   verbose: true,
   strict: true,
