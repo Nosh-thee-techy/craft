@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0c0c0e;
+  --foreground: #f4f1ea;
+  --card: #141416;
+  --card-foreground: #f4f1ea;
+  --primary: #c5a572;
+  --primary-foreground: #1a140c;
+  --secondary: #1e1e22;
+  --secondary-foreground: #f4f1ea;
+  --muted: #1e1e22;
+  --muted-foreground: #a39e94;
+  --accent: #1e1e22;
+  --accent-foreground: #f4f1ea;
+  --destructive: #e05d4f;
+  --destructive-foreground: #f4f1ea;
+  --border: #2a2a2e;
+  --input: #2a2a2e;
+  --ring: #c5a572;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}

@@ -1,0 +1,38 @@
+---
+description: CRAFT product, stack, and code-quality rules. Apply to every change.
+alwaysApply: true
+---
+
+# CRAFT
+
+You are building CRAFT, a Next.js (TypeScript) app. Follow these rules in every change.
+
+## Code quality
+
+- TypeScript strict mode. No `any` unless commented with a reason.
+- Comment all code well: every file starts with a short header comment (purpose, inputs, outputs). Every function gets a doc comment. Explain WHY for any non-obvious logic.
+- Small files, one responsibility each. Keep route handlers thin; put logic in `/lib`.
+- Validate all external input with zod (API bodies, webhook payloads, LLM outputs).
+- Never hardcode secrets. Read from env via a single typed `lib/env.ts`.
+
+## Product rules (non-negotiable)
+
+- Money amounts, splits, buffer sizes, forecasts and scores are computed in deterministic code. The LLM may only EXPLAIN them in words. It never calculates money.
+- The AI never creates, alters or invents evidence. It only reads and organises what the user uploaded.
+- Every agent output that leaves the app (pack, letter, message) must pass the verifier in `lib/ai/verifier.ts`, which checks each claim against uploaded source text.
+- Every agent action is written to the append-only `agent_actions` table.
+- Webhooks are idempotent: store the PayPal event id with a unique constraint; ignore duplicates.
+- Say "verified link ownership", never "verified identity" or "verified authorship".
+- Call the score an "income stability and trust score". Never "credit score".
+- Investing features are educational and simulated. No trading, no promised returns, ranges only.
+
+## Stack
+
+- Next.js App Router, Tailwind, shadcn/ui, AG Grid Community, PostgreSQL + Drizzle, pgvector, S3-compatible private storage with signed URLs, Auth.js, zod, pdf-lib.
+- One LLM wrapper at `lib/ai/client.ts` (tool calling, JSON-schema outputs, vision). Provider is swappable.
+- PayPal sandbox only. Confirm endpoint paths and event names against PayPal's current docs before using them.
+
+## Workflow
+
+- Work in small steps. After each step, run typecheck and lint, and fix errors before moving on.
+- Add or update the README section for any feature you finish.
