@@ -7,7 +7,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/auth/session";
+import { readEvidenceFile } from "@/lib/ai/reader";
 import { logAgentAction } from "@/lib/ai/log";
+import { LlmNotConfiguredError } from "@/lib/ai/client";
 import {
   addLinkSchema,
   evidenceTypeSchema,
@@ -36,9 +38,10 @@ export async function uploadEvidenceAction(
 
   try {
     const bytes = Buffer.from(await file.arrayBuffer());
+    const mime = file.type || "application/octet-stream";
     const row = await addFileEvidence(userId, projectId, typeParsed.data, {
       name: file.name,
-      type: file.type || "application/octet-stream",
+      type: mime,
       bytes,
     });
     await logAgentAction({
@@ -47,6 +50,20 @@ export async function uploadEvidenceAction(
       input: { projectId, type: typeParsed.data, name: file.name },
       output: { id: row.id, sha256: row.sha256 },
     });
+    try {
+      await readEvidenceFile(userId, row.id, bytes, mime);
+    } catch (error) {
+      if (!(error instanceof LlmNotConfiguredError)) {
+        // Hash already stored. Reader failure must not roll back the evidence.
+        await logAgentAction({
+          userId,
+          action: "evidence.reader",
+          input: { evidenceId: row.id },
+          output: { error: error instanceof Error ? error.message : "reader failed" },
+          verifierPassed: false,
+        });
+      }
+    }
     revalidatePath("/vault");
     revalidatePath(`/projects/${projectId}`);
     return { ok: true };
