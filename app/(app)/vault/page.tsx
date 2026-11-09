@@ -1,24 +1,36 @@
 /**
- * Purpose: Evidence Vault — hashed uploads, checklist, ledger.
- * Inputs: the signed-in user's projects and evidence rows.
- * Outputs: the Phase 2 vault workspace.
+ * Purpose: Evidence Vault — hashed uploads, checklist, ledger, auditor.
+ * Inputs: signed-in user; optional `project` query.
+ * Outputs: the Phase 2 vault workspace scoped to one project.
  */
 import { requireUserId } from "@/lib/auth/session";
 import { completenessFromTypes } from "@/lib/evidence/completeness";
-import { listEvidence } from "@/lib/evidence/service";
+import { listEvidence, projectCompleteness } from "@/lib/evidence/service";
 import { listProjects } from "@/lib/projects/service";
 import { PageHeader } from "@/components/brand/page-header";
+import { AuditorPanel } from "@/components/vault/auditor-panel";
 import { EvidenceChecklist } from "@/components/vault/checklist";
 import { EvidenceGrid } from "@/components/vault/evidence-grid";
+import { ProjectSwitcher } from "@/components/vault/project-switcher";
 import { VaultUploadForm } from "@/components/vault/upload-form";
 
+type VaultPageProps = {
+  searchParams: Promise<{ project?: string }>;
+};
+
 /**
- * Load the ledger on the server. Completeness is code, not the LLM.
+ * Load one project's ledger. Completeness is code, not the LLM.
  */
-export default async function VaultPage() {
+export default async function VaultPage({ searchParams }: VaultPageProps) {
   const userId = await requireUserId();
-  const [projects, rows] = await Promise.all([listProjects(userId), listEvidence(userId)]);
-  const completeness = completenessFromTypes(rows.map((row) => row.type));
+  const { project: requestedId } = await searchParams;
+  const projects = await listProjects(userId);
+  const selected = projects.find((project) => project.id === requestedId) ?? projects[0];
+
+  const rows = selected ? await listEvidence(userId, selected.id) : [];
+  const completeness = selected
+    ? ((await projectCompleteness(userId, selected.id)) ?? completenessFromTypes([]))
+    : completenessFromTypes([]);
 
   return (
     <div>
@@ -27,12 +39,14 @@ export default async function VaultPage() {
         title="Evidence Vault"
         lede="Every file gets a hash and a server timestamp. The AI may only read what you put here. It never creates proof."
       />
-      <div className="mb-6">
+      <ProjectSwitcher projects={projects} selectedId={selected?.id ?? ""} />
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <EvidenceChecklist completeness={completeness} />
+        {selected ? <AuditorPanel projectId={selected.id} /> : null}
       </div>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <EvidenceGrid rows={rows} />
-        <VaultUploadForm projects={projects} />
+        <VaultUploadForm projects={projects} selectedProjectId={selected?.id} />
       </div>
     </div>
   );

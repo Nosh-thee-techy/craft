@@ -27,12 +27,13 @@ const FILE_TYPES = EVIDENCE_TYPES.filter((type) => type !== "portfolio_link");
 
 type UploadFormProps = {
   projects: ProjectRow[];
+  selectedProjectId?: string;
 };
 
 /**
  * Two doors into the vault: a file, or a public link. The AI never uses these forms.
  */
-export function VaultUploadForm({ projects }: UploadFormProps) {
+export function VaultUploadForm({ projects, selectedProjectId }: UploadFormProps) {
   const [fileState, fileAction, filePending] = useActionState(uploadEvidenceAction, initial);
   const [linkState, linkAction, linkPending] = useActionState(addPortfolioLinkAction, initial);
 
@@ -59,7 +60,7 @@ export function VaultUploadForm({ projects }: UploadFormProps) {
         </CardHeader>
         <form action={fileAction}>
           <CardContent className="space-y-4">
-            <ProjectField id="file-projectId" projects={projects} />
+            <ProjectField id="file-projectId" projects={projects} selectedProjectId={selectedProjectId} />
             <div className="space-y-2">
               <Label htmlFor="type">Proof type</Label>
               <select
@@ -104,7 +105,7 @@ export function VaultUploadForm({ projects }: UploadFormProps) {
         </CardHeader>
         <form action={linkAction}>
           <CardContent className="space-y-4">
-            <ProjectField id="link-projectId" projects={projects} />
+            <ProjectField id="link-projectId" projects={projects} selectedProjectId={selectedProjectId} />
             <div className="space-y-2">
               <Label htmlFor="url">Public URL</Label>
               <Input id="url" name="url" type="url" required placeholder="https://" />
@@ -126,7 +127,15 @@ export function VaultUploadForm({ projects }: UploadFormProps) {
 /**
  * Shared project picker. Two forms, same list.
  */
-function ProjectField({ id, projects }: { id: string; projects: ProjectRow[] }) {
+function ProjectField({
+  id,
+  projects,
+  selectedProjectId,
+}: {
+  id: string;
+  projects: ProjectRow[];
+  selectedProjectId?: string;
+}) {
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>Project</Label>
@@ -134,6 +143,7 @@ function ProjectField({ id, projects }: { id: string; projects: ProjectRow[] }) 
         id={id}
         name="projectId"
         required
+        defaultValue={selectedProjectId}
         className="flex h-12 w-full rounded-2xl border border-border bg-[var(--field)] px-4 text-sm"
       >
         {projects.map((project) => (
