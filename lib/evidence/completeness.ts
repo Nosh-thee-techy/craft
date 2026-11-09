@@ -6,17 +6,7 @@
  * WHY plain code: the LLM may explain the score in words. It never calculates it.
  */
 import "server-only";
-
-export const EVIDENCE_TYPES = [
-  "contract",
-  "invoice",
-  "payment",
-  "deliverable",
-  "comms",
-  "portfolio_link",
-] as const;
-
-export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
+import { EVIDENCE_TYPES, type EvidenceType } from "@/lib/evidence/schemas";
 
 export type Completeness = {
   score: number;
@@ -39,6 +29,6 @@ export function completenessFromTypes(types: readonly string[]): Completeness {
 /**
  * Narrow a string to a checklist type.
  */
-export function isEvidenceType(value: string): value is EvidenceType {
+function isEvidenceType(value: string): value is EvidenceType {
   return (EVIDENCE_TYPES as readonly string[]).includes(value);
 }
