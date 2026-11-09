@@ -37,7 +37,7 @@ export default async function VaultPage({ searchParams }: VaultPageProps) {
       <PageHeader
         kicker="Records"
         title="Evidence Vault"
-        lede="Every file gets a hash and a server timestamp. The AI may only read what you put here. It never creates proof."
+        lede="Save files here. Each one gets a hash and a time. The AI can only read what you upload."
       />
       <ProjectSwitcher projects={projects} selectedId={selected?.id ?? ""} />
       <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">

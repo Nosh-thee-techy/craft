@@ -33,10 +33,8 @@ export function LoginForm() {
     <Card className="w-full">
       <CardHeader>
         <p className="text-xs uppercase tracking-[0.24em] text-primary">Welcome back</p>
-        <CardTitle className="text-3xl">Slip back in</CardTitle>
-        <CardDescription>
-          Your invoices, vault, and trust page are waiting exactly where you left them.
-        </CardDescription>
+        <CardTitle className="text-2xl md:text-3xl">Sign in</CardTitle>
+        <CardDescription>Use the email you signed up with.</CardDescription>
       </CardHeader>
       <form action={action}>
         <CardContent className="space-y-4">
@@ -58,12 +56,12 @@ export function LoginForm() {
         </CardContent>
         <CardFooter className="flex flex-col items-stretch gap-4">
           <Button type="submit" disabled={pending}>
-            {pending ? "Opening the door…" : "Enter the studio"}
+            {pending ? "Signing in…" : "Sign in"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             New here?{" "}
             <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
-              Claim a studio
+              Create an account
             </Link>
           </p>
         </CardFooter>
@@ -82,10 +80,9 @@ export function SignupForm() {
     <Card className="w-full">
       <CardHeader>
         <p className="text-xs uppercase tracking-[0.24em] text-accent">New studio</p>
-        <CardTitle className="text-3xl">Make a home for the work</CardTitle>
+        <CardTitle className="text-2xl md:text-3xl">Create your studio</CardTitle>
         <CardDescription>
-          For Kenyan creatives getting paid on PayPal — photographers, producers, houses, one-person
-          studios.
+          For Kenyan creatives who get paid on PayPal.
         </CardDescription>
       </CardHeader>
       <form action={action}>
@@ -116,10 +113,10 @@ export function SignupForm() {
         </CardContent>
         <CardFooter className="flex flex-col items-stretch gap-4">
           <Button type="submit" disabled={pending}>
-            {pending ? "Setting the lights…" : "Open my studio"}
+            {pending ? "Creating…" : "Create account"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Already have a key?{" "}
+            Already have an account?{" "}
             <Link href="/login" className="text-primary underline-offset-4 hover:underline">
               Sign in
             </Link>

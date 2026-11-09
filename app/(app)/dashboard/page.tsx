@@ -15,28 +15,28 @@ const DOORS = [
     icon: FolderKanban,
     kicker: "Live",
     title: "Projects",
-    copy: "Draft work, send a PayPal invoice, watch it fund.",
+    copy: "Name the job and send a PayPal bill.",
   },
   {
     href: "/vault",
     icon: Archive,
     kicker: "Live",
     title: "Vault",
-    copy: "Hashes and timestamps for the work nobody else can fake.",
+    copy: "Save files with a hash so you can prove the work.",
   },
   {
     href: "/freeze-shield",
     icon: Shield,
     kicker: "Soon",
     title: "Freeze Shield",
-    copy: "When PayPal limits you, walk in with evidence — not panic.",
+    copy: "If PayPal holds your money, answer with your vault files.",
   },
   {
     href: "/money",
     icon: Wallet,
     kicker: "Soon",
     title: "Money",
-    copy: "Splits, a cash-flow band, and a score you can actually explain.",
+    copy: "Split tax, savings, and spend. No promised returns.",
   },
 ] as const;
 
@@ -52,7 +52,7 @@ export default async function DashboardPage() {
       <PageHeader
         kicker="Studio"
         title={`Hey ${firstName}.`}
-        lede="The work is already happening. This is the room where proof, PayPal, and the next invoice live together."
+        lede="Send bills, save proof, and see what to do next. Start with a project."
         action={
           <Button asChild>
             <Link href="/projects">Open projects</Link>
@@ -60,14 +60,14 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="mb-10 overflow-hidden rounded-[28px] border border-primary/25 bg-gradient-to-br from-primary/18 via-accent/10 to-teal/10 p-8">
-        <p className="text-xs uppercase tracking-[0.24em] text-primary">Tonight’s move</p>
-        <h2 className="mt-3 max-w-xl font-serif text-3xl italic leading-tight md:text-4xl">
-          Create a project. Send a sandbox invoice. Get paid on the record.
+      <div className="mb-8 overflow-hidden rounded-[24px] border border-primary/25 bg-gradient-to-br from-primary/18 via-accent/10 to-teal/10 p-5 md:rounded-[28px] md:p-8">
+        <p className="text-xs uppercase tracking-[0.24em] text-primary">Do this next</p>
+        <h2 className="mt-3 max-w-xl font-serif text-2xl italic leading-tight md:text-4xl">
+          Make a project. Send a PayPal bill. Get paid.
         </h2>
         <p className="mt-4 max-w-lg text-sm text-muted-foreground">
-          Signed in as {session?.user.email}. Kenya-based PayPal accounts often cannot
-          invoice — use a US sandbox Business merchant if send fails.
+          Signed in as {session?.user.email}. If sending a bill fails in Kenya, use a US
+          sandbox Business account to send and a Personal buyer to pay.
         </p>
       </div>
 

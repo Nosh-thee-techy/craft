@@ -21,7 +21,7 @@ export default async function ProjectsPage() {
       <PageHeader
         kicker="The work"
         title="Projects"
-        lede="Name the client, name the scope, send the invoice. This is the ledger — not a spreadsheet pretending to be one."
+        lede="Name the client and the work, then send a PayPal bill."
       />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <ProjectsGrid rows={rows} />
