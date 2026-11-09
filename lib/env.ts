@@ -26,6 +26,7 @@ const envSchema = z.object({
   PAYPAL_WEBHOOK_ID: optionalString,
   LLM_API_KEY: optionalString,
   LLM_MODEL: optionalString,
+  LLM_BASE_URL: optionalString,
   STORAGE_ENDPOINT: optionalString,
   STORAGE_BUCKET: optionalString,
   STORAGE_ACCESS_KEY: optionalString,
