@@ -10,7 +10,7 @@ Built for the PayPal AI Hackathon.
 
 Dusk (dark glass) is the default studio. **White mode** is a paper-and-gold light theme — same glass, same type, remembered in the browser. Toggle it from the sun/moon control on the landing page, login, and the app rail.
 
-The landing map (`#map`) is the second section: a 3×2 pictured board of rooms (studio → bill → vault → client page, with a pink stuck-money fork). Rooms sit in a CSS grid so the board cannot collapse.
+The landing map (`#map`) is the second section: a 3×2 pictured board of rooms (studio → bill → vault → client page, with a pink stuck-money fork). Rooms sit in a CSS grid so the board cannot collapse. A scrolling craft-name marquee sits above and below the map as the section border.
 
 Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
 

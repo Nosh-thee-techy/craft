@@ -301,6 +301,10 @@ html.light .studio-map-board {
   animation: marquee 28s linear infinite;
 }
 
+.marquee-track-reverse {
+  animation-direction: reverse;
+}
+
 @keyframes drift {
   0%,
   100% {
@@ -351,6 +355,7 @@ html.light .studio-map-board {
 @media (prefers-reduced-motion: reduce) {
   .orb,
   .marquee-track,
+  .marquee-track-reverse,
   .rise,
   .rise-2,
   .rise-3,

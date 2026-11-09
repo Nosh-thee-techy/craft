@@ -5,30 +5,16 @@
  */
 import Link from "next/link";
 import { BrandMark } from "@/components/brand/mark";
+import { CraftMarquee } from "@/components/brand/craft-marquee";
 import { HeroCollage } from "@/components/brand/hero-collage";
 import { StudioMap } from "@/components/brand/studio-map";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { Button } from "@/components/ui/button";
 
-const CRAFTS = [
-  "photographer",
-  "illustrator",
-  "producer",
-  "designer",
-  "writer",
-  "filmmaker",
-  "musician",
-  "stylist",
-  "animator",
-  "fashion house",
-];
-
 /**
  * Marketing home. The map is the second thing you meet, not buried.
  */
 export default function HomePage() {
-  const marquee = [...CRAFTS, ...CRAFTS];
-
   return (
     <div className="relative min-h-dvh min-w-0 overflow-x-clip">
       <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 md:px-8 md:py-6">
@@ -73,20 +59,13 @@ export default function HomePage() {
           </div>
         </section>
 
+        <CraftMarquee />
+
         <div className="rise-4 min-w-0">
           <StudioMap />
         </div>
 
-        <section className="rise-5 marquee py-2" aria-hidden="true">
-          <div className="marquee-track font-display text-xs uppercase tracking-[0.28em] text-foreground/40 md:text-sm">
-            {marquee.map((craft, index) => (
-              <span key={`${craft}-${index}`} className="flex items-center gap-8">
-                {craft}
-                <span className="size-1.5 rounded-full bg-accent/80" />
-              </span>
-            ))}
-          </div>
-        </section>
+        <CraftMarquee reverse />
 
         <section className="glass overflow-hidden rounded-[28px] px-5 py-8 md:rounded-[32px] md:px-14 md:py-14">
           <p className="text-xs uppercase tracking-[0.28em] text-teal">In short</p>
