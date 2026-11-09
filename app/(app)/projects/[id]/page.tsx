@@ -53,9 +53,14 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
           <h1 className="font-display text-4xl tracking-tight md:text-5xl">{project.clientName}</h1>
           <p className="mt-2 text-muted-foreground">{project.clientEmail}</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/projects">Back to the ledger</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/vault">Open vault</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/projects">Back to the ledger</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
