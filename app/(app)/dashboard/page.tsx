@@ -20,7 +20,7 @@ const DOORS = [
   {
     href: "/vault",
     icon: Archive,
-    kicker: "Soon",
+    kicker: "Live",
     title: "Vault",
     copy: "Hashes and timestamps for the work nobody else can fake.",
   },
