@@ -12,13 +12,14 @@ Dusk (dark glass) is the default studio. **White mode** is a paper-and-gold ligh
 
 Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
 
-## What works now (Phase 0–1)
+## What works now (Phase 0–2)
 
 - Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives, AG Grid Community
 - Auth.js email + password login; `(app)` routes are protected
 - Drizzle schema for every table in `CRAFT_BUILD_PLAN.md` §4
 - `GET /api/health`
 - **PayPal sandbox round trip:** create a project, send an invoice, webhook marks it `funded`
+- **Evidence Vault:** private upload, SHA-256, server timestamp, signed download, checklist score (in code), optional LLM reader/auditor
 
 ## Setup
 
@@ -46,6 +47,14 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000), sign up, then visit `/projects`.
+
+## Evidence Vault (Phase 2)
+
+Open `/vault` after you have a project. Files land in `.data/vault` locally (gitignored) with an HMAC-signed download that expires in 15 minutes. Completeness is `present types / 6`, computed in `lib/evidence/completeness.ts` — the LLM never calculates it.
+
+Set `LLM_API_KEY` (and optional `LLM_MODEL`, `LLM_BASE_URL`) to enable vision/JSON extraction and embeddings into `doc_chunks`. Without a key, uploads still hash and store; the auditor lists missing checklist types in plain language.
+
+The AI only reads uploaded bytes. It cannot create evidence rows.
 
 ## PayPal sandbox (Phase 1)
 
@@ -101,10 +110,9 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 | Real | Later |
 | --- | --- |
-| Login, protected routes, health, schema | Evidence Vault (Phase 2) |
-| Projects UI (AG Grid), PayPal invoice send, webhook fund | Freeze Shield + verifier (Phase 3) |
-| | Trust page / client confirm (Phase 4) |
-| | Verified link ownership (Phase 5) |
+| Login, protected routes, health, schema | Freeze Shield + verifier (Phase 3) |
+| Projects UI, PayPal invoice send, webhook fund | Trust page / client confirm (Phase 4) |
+| Evidence Vault (hash, signed download, auditor) | Verified link ownership (Phase 5) |
 | | Score, forecast, copilot (Phase 6) |
 | | Demo seed + eval set (Phase 7) |
 
