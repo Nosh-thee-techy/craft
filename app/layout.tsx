@@ -1,16 +1,29 @@
 /**
- * Purpose: Root HTML shell, fonts, and metadata for every CRAFT route.
+ * Purpose: Root HTML shell, studio fonts, and the shared dusk atmosphere.
  * Inputs: child route trees.
- * Outputs: the document wrapper. Dark by default (product/AI app).
+ * Outputs: the branded document wrapper for every CRAFT screen.
  */
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist_Mono, Outfit, Syne } from "next/font/google";
+import { Atmosphere } from "@/components/brand/atmosphere";
+import { ThemeProvider } from "@/components/brand/theme-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+});
+
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({
@@ -19,13 +32,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRAFT",
+  title: "CRAFT — proof as beautiful as the work",
   description:
-    "Creators' Records, Assurance, Funds & Trust — a PayPal-centred workspace for Kenyan creatives.",
+    "Creators' Records, Assurance, Funds & Trust. A PayPal studio for Kenyan creatives: get paid, prove the work, survive a freeze, plan the money.",
 };
 
 /**
- * Wrap all pages. Feature UIs live in nested layouts.
+ * Wrap all pages in the same sky, grain, and type system.
  */
 export default function RootLayout({
   children,
@@ -33,9 +46,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      suppressHydrationWarning
+      className={`${outfit.variable} ${syne.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground">{children}</body>
+      <body className="relative min-h-full bg-background font-sans text-foreground">
+        <ThemeProvider>
+          <Atmosphere />
+          <div className="relative z-10 min-h-full">{children}</div>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

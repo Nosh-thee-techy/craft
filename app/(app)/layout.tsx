@@ -1,7 +1,7 @@
 /**
- * Purpose: Authenticated app chrome. Second line of defence after Proxy.
+ * Purpose: Authenticated studio chrome. Second line of defence after Proxy.
  * Inputs: child (app) pages; Auth.js session.
- * Outputs: sidebar + main, or a redirect to /login.
+ * Outputs: floating glass rail + canvas, or a redirect to /login.
  */
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
@@ -22,9 +22,11 @@ export default async function AppLayout({
   const userName = session.user.name ?? session.user.email ?? "Creative";
 
   return (
-    <div className="flex min-h-full">
+    <div className="flex min-h-full flex-col gap-3 p-3 md:flex-row md:p-4">
       <AppNav userName={userName} />
-      <main className="flex-1 p-8">{children}</main>
+      <main className="studio-floor min-h-[calc(100vh-1.5rem)] flex-1 overflow-auto rounded-[28px] p-5 md:p-10">
+        {children}
+      </main>
     </div>
   );
 }

@@ -4,16 +4,21 @@ Creators' Records, Assurance, Funds & Trust.
 
 A PayPal-centred workspace for Kenyan creatives: get paid, prove the work, survive a PayPal limitation, and plan the money.
 
-Built for the PayPal AI Hackathon. Phase 0 is the blank, authenticated app. Feature work starts in Phase 1.
+Built for the PayPal AI Hackathon.
 
-## What this is (Phase 0)
+## Brand
 
-- Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives
-- Auth.js email + password login
+Dusk (dark glass) is the default studio. **White mode** is a paper-and-gold light theme — same glass, same type, remembered in the browser. Toggle it from the sun/moon control on the landing page, login, and the app rail.
+
+Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
+
+## What works now (Phase 0–1)
+
+- Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives, AG Grid Community
+- Auth.js email + password login; `(app)` routes are protected
 - Drizzle schema for every table in `CRAFT_BUILD_PLAN.md` §4
 - `GET /api/health`
-- Protected `(app)` routes
-- PayPal webhook route exists but returns 501 until Phase 1
+- **PayPal sandbox round trip:** create a project, send an invoice, webhook marks it `funded`
 
 ## Setup
 
@@ -40,7 +45,42 @@ Built for the PayPal AI Hackathon. Phase 0 is the blank, authenticated app. Feat
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000), sign up, then visit `/dashboard`.
+4. Open [http://localhost:3000](http://localhost:3000), sign up, then visit `/projects`.
+
+## PayPal sandbox (Phase 1)
+
+Set these in `.env.local`:
+
+```text
+PAYPAL_ENV=sandbox
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+PAYPAL_WEBHOOK_ID=
+```
+
+Webhook URL to register on the sandbox app:
+
+`https://<public-host>/api/paypal/webhook`
+
+Subscribe to:
+
+- `INVOICING.INVOICE.PAID` — primary; `resource.id` is the PayPal invoice id (`INV2-…`)
+- `PAYMENT.CAPTURE.COMPLETED` — also handled; duplicate deliveries do not create a second payment
+
+Endpoints used (confirmed against PayPal docs, 9 Nov 2026):
+
+| Action | Path |
+| --- | --- |
+| OAuth token | `POST https://api-m.sandbox.paypal.com/v1/oauth2/token` |
+| Create draft invoice | `POST /v2/invoicing/invoices` |
+| Send invoice | `POST /v2/invoicing/invoices/{invoice_id}/send` |
+| Verify webhook | `POST /v1/notifications/verify-webhook-signature` |
+
+Docs for verify still show `https://api.sandbox.paypal.com` (no `-m`). We call the `-m` host, which is the current REST host. See comments in `lib/paypal/client.ts`.
+
+### Kenya-based accounts
+
+PayPal Invoicing is often unavailable on Kenya personal/business accounts, including sandbox. If send fails with a permission error, use a **US sandbox Business** app as the merchant (client id/secret) and pay with a **sandbox Personal** buyer. CRAFT still stores the Kenyan creative as the workspace user.
 
 ## Scripts
 
@@ -55,15 +95,14 @@ Built for the PayPal AI Hackathon. Phase 0 is the blank, authenticated app. Feat
 
 ## Environment variables
 
-See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in this repo's judge docs later.
+See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in judge docs later.
 
 ## What is real vs not yet built
 
-| Real in Phase 0 | Later |
+| Real | Later |
 | --- | --- |
-| Login, protected routes, health, schema, migrations | PayPal invoice round trip (Phase 1) |
-| | Evidence Vault (Phase 2) |
-| | Freeze Shield + verifier (Phase 3) |
+| Login, protected routes, health, schema | Evidence Vault (Phase 2) |
+| Projects UI (AG Grid), PayPal invoice send, webhook fund | Freeze Shield + verifier (Phase 3) |
 | | Trust page / client confirm (Phase 4) |
 | | Verified link ownership (Phase 5) |
 | | Score, forecast, copilot (Phase 6) |
@@ -71,18 +110,10 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 The income stability and trust score is **not** a credit score. Investing, when it lands, is educational and simulated.
 
-## Deploy (Render)
+## Deploy
 
-The hackathon needs a public URL so PayPal sandbox webhooks can reach `/api/paypal/webhook`.
-
-1. In the [Render dashboard](https://dashboard.render.com), create a **Blueprint** from this repo (`render.yaml`) or a Node web service plus a Postgres 16 database.
-2. Set `APP_URL` to the public `https://….onrender.com` URL after the first deploy.
-3. Leave `PAYPAL_ENV=sandbox`. Add PayPal / LLM / storage keys when those phases start.
-4. Render runs `node scripts/migrate.mjs && npm start` on boot.
-
-Until a Render account is connected, the app runs locally at `http://localhost:3000`.
+A public HTTPS URL is required so PayPal can deliver webhooks. **Fly.io** is the intended host (`fly launch` from this repo when you are ready). `render.yaml` remains as an optional Blueprint. Locally the app runs at `http://localhost:3000`; use a tunnel (ngrok/Cloudflare) against `/api/paypal/webhook` until Fly is live.
 
 ## Licence
 
 MIT. See `LICENSE`.
-

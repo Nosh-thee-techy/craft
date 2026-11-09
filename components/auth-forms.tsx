@@ -30,10 +30,13 @@ export function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, initialState);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Email login for your CRAFT workspace.</CardDescription>
+        <p className="text-xs uppercase tracking-[0.24em] text-primary">Welcome back</p>
+        <CardTitle className="text-3xl">Slip back in</CardTitle>
+        <CardDescription>
+          Your invoices, vault, and trust page are waiting exactly where you left them.
+        </CardDescription>
       </CardHeader>
       <form action={action}>
         <CardContent className="space-y-4">
@@ -53,14 +56,14 @@ export function LoginForm() {
           />
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </CardContent>
-        <CardFooter className="flex flex-col items-stretch gap-3">
+        <CardFooter className="flex flex-col items-stretch gap-4">
           <Button type="submit" disabled={pending}>
-            {pending ? "Signing in…" : "Sign in"}
+            {pending ? "Opening the door…" : "Enter the studio"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             New here?{" "}
-            <Link href="/signup" className="text-foreground underline">
-              Create an account
+            <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+              Claim a studio
             </Link>
           </p>
         </CardFooter>
@@ -76,14 +79,18 @@ export function SignupForm() {
   const [state, action, pending] = useActionState(signupAction, initialState);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Create your workspace</CardTitle>
-        <CardDescription>For Kenyan creatives getting paid on PayPal.</CardDescription>
+        <p className="text-xs uppercase tracking-[0.24em] text-accent">New studio</p>
+        <CardTitle className="text-3xl">Make a home for the work</CardTitle>
+        <CardDescription>
+          For Kenyan creatives getting paid on PayPal — photographers, producers, houses, one-person
+          studios.
+        </CardDescription>
       </CardHeader>
       <form action={action}>
         <CardContent className="space-y-4">
-          <Field id="name" name="name" label="Name" errors={state.fieldErrors?.name} />
+          <Field id="name" name="name" label="Your name" errors={state.fieldErrors?.name} />
           <Field
             id="craft"
             name="craft"
@@ -107,13 +114,13 @@ export function SignupForm() {
           />
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </CardContent>
-        <CardFooter className="flex flex-col items-stretch gap-3">
+        <CardFooter className="flex flex-col items-stretch gap-4">
           <Button type="submit" disabled={pending}>
-            {pending ? "Creating…" : "Create account"}
+            {pending ? "Setting the lights…" : "Open my studio"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-foreground underline">
+            Already have a key?{" "}
+            <Link href="/login" className="text-primary underline-offset-4 hover:underline">
               Sign in
             </Link>
           </p>

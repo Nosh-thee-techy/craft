@@ -1,5 +1,5 @@
 /**
- * Purpose: shadcn/ui Label primitive wrapping Radix Label.
+ * Purpose: Form label primitive wrapping Radix Label.
  * Inputs: standard label props plus className.
  * Outputs: a styled <label>.
  */
@@ -18,7 +18,7 @@ function Label({
     <LabelPrimitive.Root
       data-slot="label"
       className={cn(
-        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         className,
       )}
       {...props}
