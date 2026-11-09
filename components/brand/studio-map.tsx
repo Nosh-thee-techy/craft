@@ -1,10 +1,13 @@
 /**
- * Purpose: A map of CRAFT — nodes, gold/pink paths, photos.
+ * Purpose: A pictured map of CRAFT — rooms in document flow so the board
+ * cannot collapse, gold/pink paths on top of photos.
  * Inputs: none.
- * Outputs: a timeline on small screens and a connected map on desktop.
+ * Outputs: one map on every screen size; 1 column on phones, 3×2 on desktop.
  */
 import Image from "next/image";
 import Link from "next/link";
+
+type PathKind = "usual" | "stuck";
 
 type Node = {
   id: string;
@@ -14,9 +17,9 @@ type Node = {
   image: string;
   alt: string;
   href: string;
-  /** Percent positions on the desktop map board. */
-  x: number;
-  y: number;
+  path: PathKind;
+  /** Tailwind order so mobile reads as a story and desktop is a 3×2 map. */
+  order: string;
 };
 
 const NODES: Node[] = [
@@ -28,8 +31,8 @@ const NODES: Node[] = [
     image: "/map/start.jpg",
     alt: "A notebook opening on a studio table",
     href: "/signup",
-    x: 4,
-    y: 8,
+    path: "usual",
+    order: "order-1",
   },
   {
     id: "pay",
@@ -39,8 +42,8 @@ const NODES: Node[] = [
     image: "/map/pay.jpg",
     alt: "A person sending a payment from a laptop",
     href: "/projects",
-    x: 36,
-    y: 4,
+    path: "usual",
+    order: "order-2",
   },
   {
     id: "vault",
@@ -50,8 +53,8 @@ const NODES: Node[] = [
     image: "/map/vault.jpg",
     alt: "Prints and papers stored in a wooden drawer",
     href: "/vault",
-    x: 68,
-    y: 10,
+    path: "usual",
+    order: "order-3",
   },
   {
     id: "trust",
@@ -61,8 +64,9 @@ const NODES: Node[] = [
     image: "/map/trust.jpg",
     alt: "A creative and a client looking at a portfolio together",
     href: "/t/demo",
-    x: 68,
-    y: 54,
+    path: "usual",
+    // Phone: after vault. Desktop: bottom-right of the 3×2 board.
+    order: "order-4 md:order-6",
   },
   {
     id: "freeze",
@@ -72,8 +76,8 @@ const NODES: Node[] = [
     image: "/map/freeze.jpg",
     alt: "A creative calmly sorting papers at a desk",
     href: "/freeze-shield",
-    x: 36,
-    y: 52,
+    path: "stuck",
+    order: "order-5",
   },
   {
     id: "money",
@@ -83,13 +87,14 @@ const NODES: Node[] = [
     image: "/map/money.jpg",
     alt: "Hands sorting cash into small bowls",
     href: "/money",
-    x: 4,
-    y: 56,
+    path: "stuck",
+    // Phone: last. Desktop: bottom-left of the 3×2 board.
+    order: "order-6 md:order-4",
   },
 ];
 
 /**
- * Map board: usual path in gold, stuck-money path in pink.
+ * Map board: rooms sit in a CSS grid (real height). SVG paths sit behind them.
  */
 export function StudioMap() {
   return (
@@ -112,64 +117,10 @@ export function StudioMap() {
         </div>
       </div>
 
-      <div className="relative md:hidden">
-        <div className="absolute bottom-6 left-[15px] top-6 w-px bg-gradient-to-b from-primary via-accent to-teal" />
-        <ol className="list-none space-y-3">
-          {NODES.map((node) => (
-            <li key={node.id} className="relative pl-10">
-              <span className="absolute left-[11px] top-7 size-2.5 rounded-full bg-primary shadow-[0_0_12px_var(--primary)]" />
-              <MapCard node={node} />
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      <div className="studio-map-board relative hidden min-h-[42rem] overflow-hidden rounded-[32px] md:block">
-        <svg
-          className="pointer-events-none absolute inset-0 h-full w-full"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M 16 22 C 28 18, 36 16, 48 18 C 58 20, 66 24, 80 24"
-            fill="none"
-            stroke="var(--primary)"
-            strokeWidth="0.55"
-            strokeDasharray="1.4 1.1"
-            opacity="0.85"
-          />
-          <path
-            d="M 80 28 C 80 40, 80 48, 80 62"
-            fill="none"
-            stroke="var(--primary)"
-            strokeWidth="0.55"
-            strokeDasharray="1.4 1.1"
-            opacity="0.85"
-          />
-          <path
-            d="M 48 26 C 48 40, 48 50, 48 64"
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth="0.55"
-            strokeDasharray="1.4 1.1"
-            opacity="0.9"
-          />
-          <path
-            d="M 48 68 C 36 72, 24 74, 16 72"
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth="0.55"
-            strokeDasharray="1.4 1.1"
-            opacity="0.9"
-          />
-        </svg>
+      <div className="studio-map-board relative grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:p-8">
+        <MapPaths />
         {NODES.map((node) => (
-          <div
-            key={node.id}
-            className="absolute w-[28%]"
-            style={{ left: `${node.x}%`, top: `${node.y}%` }}
-          >
+          <div key={node.id} className={`relative z-10 min-w-0 ${node.order}`}>
             <MapCard node={node} />
           </div>
         ))}
@@ -179,13 +130,57 @@ export function StudioMap() {
 }
 
 /**
+ * Gold usual path and pink stuck path. Hidden on phones where the grid is a list.
+ */
+function MapPaths() {
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M 17 24 H 50 H 83"
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth="0.7"
+        strokeDasharray="1.6 1.2"
+        opacity="0.9"
+      />
+      <path
+        d="M 83 28 V 76"
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth="0.7"
+        strokeDasharray="1.6 1.2"
+        opacity="0.9"
+      />
+      <path
+        d="M 50 28 V 76 H 17"
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="0.7"
+        strokeDasharray="1.6 1.2"
+        opacity="0.95"
+      />
+    </svg>
+  );
+}
+
+/**
  * One map room: photo, title, one-line what happens.
  */
 function MapCard({ node }: { node: Node }) {
+  const ring =
+    node.path === "stuck"
+      ? "ring-1 ring-accent/45"
+      : "ring-1 ring-primary/35";
+
   return (
     <Link
       href={node.href}
-      className="glass glass-hover group flex min-w-0 flex-col overflow-hidden rounded-[22px] no-underline"
+      className={`glass glass-hover group flex min-w-0 flex-col overflow-hidden rounded-[22px] no-underline ${ring}`}
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden">
         <Image

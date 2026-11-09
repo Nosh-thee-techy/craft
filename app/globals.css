@@ -259,13 +259,19 @@ body::before {
 }
 
 .studio-map-board {
+  /* WHY min-height lives here: Tailwind never emitted min-h-[42rem], and
+     absolute rooms plus overflow:hidden collapsed the board to a 1px line. */
+  min-height: 36rem;
+  overflow: visible;
   background:
-    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 42%),
-    radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 40%),
+    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--primary) 28%, transparent), transparent 42%),
+    radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 40%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--teal) 10%, transparent), transparent 55%),
     linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   backdrop-filter: blur(22px);
+  border-radius: 32px;
 }
 
 .studio-map-board::before {
@@ -273,9 +279,19 @@ body::before {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.35;
+  z-index: 0;
+  border-radius: inherit;
+  opacity: 0.4;
   background-image: radial-gradient(color-mix(in srgb, var(--foreground) 18%, transparent) 1px, transparent 1px);
   background-size: 22px 22px;
+}
+
+html.light .studio-map-board {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(196, 122, 20, 0.32), transparent 44%),
+    radial-gradient(circle at 84% 78%, rgba(226, 77, 124, 0.24), transparent 42%),
+    radial-gradient(circle at 48% 48%, rgba(15, 158, 138, 0.16), transparent 52%),
+    linear-gradient(180deg, rgba(255, 248, 236, 0.92), rgba(255, 214, 170, 0.58));
 }
 
 .marquee-track {

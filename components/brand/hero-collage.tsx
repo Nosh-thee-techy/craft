@@ -35,7 +35,14 @@ export function HeroCollage() {
           className={`glass absolute overflow-hidden rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${shot.className}`}
         >
           <div className="relative aspect-[4/3] w-full">
-            <Image src={shot.src} alt={shot.alt} fill sizes="40vw" className="object-cover" />
+            <Image
+              src={shot.src}
+              alt={shot.alt}
+              fill
+              sizes="40vw"
+              priority={shot.src === "/map/start.jpg"}
+              className="object-cover"
+            />
           </div>
         </div>
       ))}
