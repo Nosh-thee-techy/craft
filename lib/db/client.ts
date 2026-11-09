@@ -3,7 +3,7 @@
  * Inputs: `env.DATABASE_URL`.
  * Outputs: `db` for typed queries and `sql` for raw SQL (health checks, extensions).
  *
- * WHY ssl on non-local hosts: Render (and most hosted Postgres) require TLS.
+ * WHY ssl on non-local hosts: Fly/Render hosted Postgres requires TLS.
  * Local docker-compose does not.
  */
 import "server-only";

@@ -1,17 +1,32 @@
 /**
- * Purpose: Projects list shell. AG Grid and create-form land in Phase 1.
- * Inputs: none yet.
- * Outputs: placeholder card.
+ * Purpose: Projects index — AG Grid ledger plus create form.
+ * Inputs: the signed-in user's projects from Postgres.
+ * Outputs: the Phase 1 projects workspace.
  */
-import { PhasePlaceholder } from "@/components/phase-placeholder";
+import { requireUserId } from "@/lib/auth/session";
+import { listProjects } from "@/lib/projects/service";
+import { PageHeader } from "@/components/brand/page-header";
+import { ProjectsGrid } from "@/components/projects/projects-grid";
+import { CreateProjectForm } from "@/components/projects/create-project-form";
 
-/** Projects index placeholder. */
-export default function ProjectsPage() {
+/**
+ * Load projects on the server, then hydrate the grid on the client.
+ */
+export default async function ProjectsPage() {
+  const userId = await requireUserId();
+  const rows = await listProjects(userId);
+
   return (
-    <PhasePlaceholder
-      title="Projects"
-      phase={1}
-      description="AG Grid list, create-project form, and PayPal sandbox invoicing will be built in Phase 1."
-    />
+    <div>
+      <PageHeader
+        kicker="The work"
+        title="Projects"
+        lede="Name the client, name the scope, send the invoice. This is the ledger — not a spreadsheet pretending to be one."
+      />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <ProjectsGrid rows={rows} />
+        <CreateProjectForm />
+      </div>
+    </div>
   );
 }
