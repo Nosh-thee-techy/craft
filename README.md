@@ -14,7 +14,7 @@ The landing map (`#map`) is the second section: a 3×2 pictured board of rooms (
 
 Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
 
-## What works now (Phase 0–2)
+## What works now (Phase 0–2, 4–5)
 
 - Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives, AG Grid Community
 - Auth.js email + password login; `(app)` routes are protected
@@ -22,6 +22,10 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - `GET /api/health`
 - **PayPal sandbox round trip:** create a project, send an invoice, webhook marks it `funded`
 - **Evidence Vault:** private upload, SHA-256, server timestamp, signed download, checklist score (in code), optional LLM reader/auditor
+- **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
+- **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
+
+Phase 3 (Freeze Shield) is owned separately and is not in this branch of work.
 
 ## Setup
 
@@ -57,6 +61,38 @@ Open `/vault` after you have a project. Files land in `.data/vault` locally (git
 Set `LLM_API_KEY` (and optional `LLM_MODEL`, `LLM_BASE_URL`) to enable vision/JSON extraction and embeddings into `doc_chunks`. Without a key, uploads still hash and store; the auditor lists missing checklist types in plain language.
 
 The AI only reads uploaded bytes. It cannot create evidence rows.
+
+## Delivery, confirm, trust (Phase 4)
+
+On a funded project, open the detail page and upload the final file. CRAFT:
+
+1. Hashes the file into the Evidence Vault as type `deliverable` with a server timestamp
+2. Stores optional publish links (public URLs only)
+3. Runs an AI/heuristic match of the file text against the project scope and shows mismatches
+4. Creates a one-click confirm link at `/c/[token]` — no login; stamps `client_confirmed_at`
+5. Lets you choose visibility under **Settings** for `/t/[slug]` (counts, portfolio, quote button)
+
+Private vault files are never exposed on confirm or trust pages. Portfolio links and publish URLs are the only outbound file references.
+
+## Onboarding + verified link ownership (Phase 5)
+
+Open `/onboarding` (new signups land here). Steps are skippable:
+
+1. Profile (name, craft, country)
+2. PayPal sandbox marker (requires env keys; can skip)
+3. Add a public link → place the `CRAFT-…` challenge code → verify
+4. AI profile draft from verified links only — edit and approve
+5. Split rules (tax / savings / expenses must total 100%; computed in code)
+6. Trust-page visibility
+7. Finish
+
+Official sources only: GitHub API, YouTube Data API, RSS/oEmbed, plus an upload-export fallback. We say **verified link ownership**, never verified identity.
+
+```bash
+npm run eval:ownership
+```
+
+Optional env: `GITHUB_TOKEN`, `YOUTUBE_API_KEY`.
 
 ## PayPal sandbox (Phase 1)
 
@@ -103,6 +139,7 @@ PayPal Invoicing is often unavailable on Kenya personal/business accounts, inclu
 | `npm run lint` | ESLint |
 | `npm run db:generate` | Create a SQL migration from `lib/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
+| `npm run eval:ownership` | Ownership challenge pass/fail fixture |
 
 ## Environment variables
 
@@ -112,11 +149,11 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 | Real | Later |
 | --- | --- |
-| Login, protected routes, health, schema | Freeze Shield + verifier (Phase 3) |
-| Projects UI, PayPal invoice send, webhook fund | Trust page / client confirm (Phase 4) |
-| Evidence Vault (hash, signed download, auditor) | Verified link ownership (Phase 5) |
-| | Score, forecast, copilot (Phase 6) |
-| | Demo seed + eval set (Phase 7) |
+| Login, protected routes, health, schema | Freeze Shield + verifier (Phase 3, separate) |
+| Projects UI, PayPal invoice send, webhook fund | Score, forecast, copilot (Phase 6) |
+| Evidence Vault (hash, signed download, auditor) | Demo seed + eval set (Phase 7) |
+| Delivery, client confirm, public trust page | |
+| Onboarding + verified link ownership | |
 
 The income stability and trust score is **not** a credit score. Investing, when it lands, is educational and simulated.
 

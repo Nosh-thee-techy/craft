@@ -4,7 +4,7 @@
  * Outputs: welcome copy plus doors into live and upcoming rooms.
  */
 import Link from "next/link";
-import { Archive, FolderKanban, Shield, Wallet } from "lucide-react";
+import { Archive, FolderKanban, Shield, Sparkles } from "lucide-react";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/brand/page-header";
 import { Button } from "@/components/ui/button";
@@ -25,18 +25,18 @@ const DOORS = [
     copy: "Save files with a hash so you can prove the work.",
   },
   {
+    href: "/settings",
+    icon: Sparkles,
+    kicker: "Live",
+    title: "Trust page",
+    copy: "Choose what clients see. Share a confirm link after delivery.",
+  },
+  {
     href: "/freeze-shield",
     icon: Shield,
     kicker: "Soon",
     title: "Freeze Shield",
     copy: "If PayPal holds your money, answer with your vault files.",
-  },
-  {
-    href: "/money",
-    icon: Wallet,
-    kicker: "Soon",
-    title: "Money",
-    copy: "Split tax, savings, and spend. No promised returns.",
   },
 ] as const;
 

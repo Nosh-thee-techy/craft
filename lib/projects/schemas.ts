@@ -50,5 +50,6 @@ export type ProjectRow = {
   amount: string;
   status: "draft" | "invoiced" | "funded" | "delivered" | "closed";
   trustSlug: string;
+  showOnTrust: boolean;
   createdAt: string;
 };

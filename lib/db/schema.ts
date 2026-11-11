@@ -77,9 +77,25 @@ export const users = pgTable(
     craft: text("craft"),
     country: text("country").notNull().default("KE"),
     passwordHash: text("password_hash"),
+    /** Public /t/[slug] handle. Null until the creative opens a trust page. */
+    publicSlug: text("public_slug"),
+    /**
+     * What the trust page is allowed to show. Stored as JSON so Phase 5
+     * settings can deepen it without another migration.
+     */
+    trustVisibilityJson: jsonb("trust_visibility_json"),
+    /** AI profile draft from verified link ownership. User must approve. */
+    profileDraftJson: jsonb("profile_draft_json"),
+    profileDraftApprovedAt: timestamp("profile_draft_approved_at", { withTimezone: true }),
+    /** PayPal sandbox connection marker (client id last-4 only; never store secrets here). */
+    paypalSandboxConnectedAt: timestamp("paypal_sandbox_connected_at", { withTimezone: true }),
+    onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [uniqueIndex("users_email_uidx").on(table.email)],
+  (table) => [
+    uniqueIndex("users_email_uidx").on(table.email),
+    uniqueIndex("users_public_slug_uidx").on(table.publicSlug),
+  ],
 );
 
 /** External profiles whose link ownership can be challenged (Phase 5). */
@@ -94,6 +110,8 @@ export const linkedAccounts = pgTable(
     handle: text("handle").notNull(),
     url: text("url").notNull(),
     challengeCode: text("challenge_code"),
+    /** Public metadata fetched after verified link ownership. Never private files. */
+    publicDataJson: jsonb("public_data_json"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     status: linkedAccountStatusEnum("status").notNull().default("pending"),
     ...timestamps,
@@ -123,6 +141,8 @@ export const projects = pgTable(
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
     status: projectStatusEnum("status").notNull().default("draft"),
     trustSlug: text("trust_slug").notNull(),
+    /** Creative must opt a project into the public trust portfolio. */
+    showOnTrust: boolean("show_on_trust").notNull().default(false),
     ...timestamps,
   },
   (table) => [
@@ -225,11 +245,20 @@ export const deliverables = pgTable(
     evidenceItemId: uuid("evidence_item_id").references(() => evidenceItems.id, {
       onDelete: "set null",
     }),
+    /** Opaque public token for /c/[token]. Never reuse project or evidence ids. */
+    confirmToken: text("confirm_token").notNull(),
+    /** Public or client-facing links the creative chose to publish with the delivery. */
+    publishLinksJson: jsonb("publish_links_json"),
+    /** AI match of deliverable text vs invoice/scope. Never invents files. */
+    matchCheckJson: jsonb("match_check_json"),
     deliveredAt: timestamp("delivered_at", { withTimezone: true }),
     clientConfirmedAt: timestamp("client_confirmed_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index("deliverables_project_idx").on(table.projectId)],
+  (table) => [
+    index("deliverables_project_idx").on(table.projectId),
+    uniqueIndex("deliverables_confirm_token_uidx").on(table.confirmToken),
+  ],
 );
 
 /** Pasted PayPal limitation notices (Phase 3). */

@@ -59,7 +59,7 @@ export async function signupAction(
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
+      redirectTo: "/onboarding",
     });
   } catch (error) {
     if (error instanceof AuthError) {
