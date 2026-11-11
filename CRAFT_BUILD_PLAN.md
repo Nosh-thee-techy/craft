@@ -316,7 +316,7 @@ numbers in code, with numbers from code
 ```
 
 Acceptance
-- [ ] Score components add up and each has a plain-language reason
+- [x] Score components add up and each has a plain-language reason
 - [ ] Forecast shows a band, not a single number
 - [ ] Copilot answers "how much can I safely invest this month?" using real data, with numbers from code
 

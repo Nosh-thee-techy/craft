@@ -8,7 +8,7 @@
  * skips any SQL file the journal does not list, and skips any entry whose
  * `when` is not newer than the last one applied. These checks catch both.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -42,5 +42,14 @@ describe("drizzle journal", () => {
 
   it("registers the Phase 6 money-inputs migration last", () => {
     expect(journal.entries.at(-1)?.tag).toBe("0003_phase6_money_inputs");
+  });
+
+  it("has no orphan .sql files outside the journal", () => {
+    const tags = new Set(journal.entries.map((entry) => entry.tag));
+    const orphans = readdirSync(drizzleDir)
+      .filter((name) => name.endsWith(".sql"))
+      .map((name) => name.replace(/\.sql$/, ""))
+      .filter((tag) => !tags.has(tag));
+    expect(orphans).toEqual([]);
   });
 });

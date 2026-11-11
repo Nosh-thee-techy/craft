@@ -14,7 +14,7 @@ The landing map (`#map`) is the second section: a 3×2 pictured board of rooms (
 
 Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
 
-## What works now (Phase 0–5)
+## What works now (Phase 0–6 foundations)
 
 - Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives, AG Grid Community
 - Auth.js email + password login; `(app)` routes are protected
@@ -25,6 +25,7 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Freeze Shield (Phase 3):** paste a PayPal limitation notice → map to vault → draft letter → fail-closed verifier → approve → PDF pack
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
 - **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
+- **Money foundations (Phase 6.1):** refund/dispute columns, ledger approval state, `planner_inputs`, Vitest harness, deterministic **income stability and trust score** + `clientKey` row mapper
 
 ## Setup
 
@@ -109,6 +110,16 @@ npm run eval:ownership
 
 Optional env: `GITHUB_TOKEN`, `YOUTUBE_API_KEY`.
 
+## Money foundations (Phase 6.1)
+
+Schema migration `drizzle/0003_phase6_money_inputs.sql` is additive only. The score lives in `lib/scoring/stability.ts` (pure functions, no DB). Row shaping — including the locked **clientKey** rule (prefer normalised client email, else name) — is in `lib/scoring/map-inputs.ts`.
+
+Still to build for the rest of Phase 6: split proposals on payment, forecast timing/cashflow, planner rules + simulate, LLM explain layer, investing simulation, Copilot, and the `/money` UI.
+
+```bash
+npm test
+```
+
 ## PayPal sandbox (Phase 1)
 
 Set these in `.env.local`:
@@ -152,6 +163,7 @@ PayPal Invoicing is often unavailable on Kenya personal/business accounts, inclu
 | `npm run build` / `npm start` | Production build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
+| `npm test` | Vitest unit suite (completeness, migrations journal, stability score, mappers) |
 | `npm run db:generate` | Create a SQL migration from `lib/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
 | `npm run eval:ownership` | Ownership challenge pass/fail fixture |
@@ -165,12 +177,13 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 | Real | Later |
 | --- | --- |
-| Login, protected routes, health, schema | Score, forecast, copilot (Phase 6) |
+| Login, protected routes, health, schema | Forecast, planner, investing sim, Copilot, `/money` UI |
 | Projects UI, PayPal invoice send, webhook fund | Demo seed + eval set (Phase 7) |
 | Evidence Vault (hash, signed download, auditor) | |
 | Freeze Shield (notice → verify → approve → PDF) | |
 | Delivery, client confirm, public trust page | |
 | Onboarding + verified link ownership | |
+| Income stability and trust score + Phase 6 schema | |
 
 The income stability and trust score is **not** a credit score. Investing, when it lands, is educational and simulated.
 
