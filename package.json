@@ -16,7 +16,9 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "eval:ownership": "npx tsx scripts/eval-ownership.ts",
-    "eval:freeze": "npx tsx scripts/eval-freeze.ts"
+    "eval:freeze": "npx tsx scripts/eval-freeze.ts",
+    "eval:suite": "npx tsx scripts/eval-suite.ts",
+    "db:seed": "npx tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",

@@ -1,0 +1,91 @@
+{
+  "user": {
+    "email": "judge@craft.demo",
+    "password": "CraftJudge2026!",
+    "name": "Amina Otieno",
+    "craft": "Photographer",
+    "country": "KE",
+    "publicSlug": "amina-studio"
+  },
+  "splitRules": { "taxPct": "30.00", "savingsPct": "20.00", "expensesPct": "50.00" },
+  "plannerInputs": {
+    "currency": "KES",
+    "monthlyEssentialExpenses": "45000.00",
+    "currentBuffer": "12000.00",
+    "debtsJson": [
+      { "label": "Camera loan", "balance": "80000.00", "minMonthly": "5000.00", "aprPct": 14 }
+    ]
+  },
+  "projects": [
+    {
+      "key": "portrait",
+      "clientName": "Wanjiku Brands",
+      "clientEmail": "accounts@wanjikubrands.co.ke",
+      "scope": "Brand portrait session for Q4 campaign, Nairobi studio.",
+      "currency": "USD",
+      "amount": "450.00",
+      "status": "funded",
+      "showOnTrust": true,
+      "evidence": ["invoice", "payment", "comms"],
+      "payment": { "amount": "450.00", "monthsAgo": 1, "source": "paypal_invoice" }
+    },
+    {
+      "key": "wedding",
+      "clientName": "Okello Wedding",
+      "clientEmail": "okello.joy@email.com",
+      "scope": "Full-day wedding coverage, two shooters, edited gallery.",
+      "currency": "USD",
+      "amount": "1200.00",
+      "status": "delivered",
+      "showOnTrust": true,
+      "evidence": ["contract", "invoice", "payment", "deliverable", "comms", "portfolio_link"],
+      "payment": { "amount": "1200.00", "monthsAgo": 2, "source": "paypal_invoice" },
+      "deliverable": { "confirmed": true }
+    },
+    {
+      "key": "menu",
+      "clientName": "Coast Cafe",
+      "clientEmail": "hello@coastcafe.ke",
+      "scope": "Food menu photography, 24 dishes.",
+      "currency": "USD",
+      "amount": "320.00",
+      "status": "funded",
+      "showOnTrust": false,
+      "evidence": ["invoice", "deliverable"],
+      "payment": { "amount": "320.00", "monthsAgo": 3, "source": "paypal_invoice" }
+    },
+    {
+      "key": "fashion",
+      "clientName": "Kanga Collective",
+      "clientEmail": "studio@kangacollective.com",
+      "scope": "Lookbook for wax-print capsule collection.",
+      "currency": "USD",
+      "amount": "780.00",
+      "status": "invoiced",
+      "showOnTrust": false,
+      "evidence": ["contract", "comms"],
+      "payment": null
+    },
+    {
+      "key": "freeze",
+      "clientName": "PayPal Hold Client",
+      "clientEmail": "buyer@held-invoice.example",
+      "scope": "Product pack for INV2-CRAFT-1088 — funds currently limited.",
+      "currency": "USD",
+      "amount": "510.00",
+      "status": "funded",
+      "showOnTrust": false,
+      "evidence": ["invoice", "payment", "deliverable", "comms", "portfolio_link"],
+      "payment": { "amount": "510.00", "monthsAgo": 0, "source": "paypal_invoice" }
+    }
+  ],
+  "syntheticPaymentHistory": [
+    { "clientName": "Wanjiku Brands", "invoiceDaysAgo": 40, "paidDaysAfter": 4 },
+    { "clientName": "Wanjiku Brands", "invoiceDaysAgo": 100, "paidDaysAfter": 6 },
+    { "clientName": "Okello Wedding", "invoiceDaysAgo": 70, "paidDaysAfter": 2 },
+    { "clientName": "Coast Cafe", "invoiceDaysAgo": 95, "paidDaysAfter": 11 },
+    { "clientName": "Coast Cafe", "invoiceDaysAgo": 160, "paidDaysAfter": 9 },
+    { "clientName": "Kanga Collective", "invoiceDaysAgo": 20, "paidDaysAfter": null }
+  ],
+  "limitationNoticeFile": "data/eval/paypal-limitation-notice.txt"
+}

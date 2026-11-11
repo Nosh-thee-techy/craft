@@ -1,0 +1,164 @@
+[
+  {
+    "id": "notice-paypal-full",
+    "kind": "notice_parse",
+    "description": "Full PayPal limitation notice maps to known request types including other for ID.",
+    "notice": "PayPal Limitation Notice. Account limited. Send invoice, proof of payment, contract, deliverable, email history, portfolio website, and a government ID within 7 days by 16 November 2026.",
+    "expectTone": "restriction",
+    "expectTypes": ["invoice", "payment", "contract", "deliverable", "comms", "portfolio_link", "other"]
+  },
+  {
+    "id": "notice-invoice-only",
+    "kind": "notice_parse",
+    "description": "Short notice asking only for an invoice.",
+    "notice": "Please send the invoice or itemised bill for this sale so we can finish the review.",
+    "expectTone": "calm",
+    "expectTypes": ["invoice"]
+  },
+  {
+    "id": "notice-urgent-contract",
+    "kind": "notice_parse",
+    "description": "Urgent tone with agreement language.",
+    "notice": "Urgent: reply immediately with the signed contract or statement of work. We need this within 24 hours.",
+    "expectTone": "urgent",
+    "expectTypes": ["contract"]
+  },
+  {
+    "id": "notice-payment-receipt",
+    "kind": "notice_parse",
+    "description": "Proof of payment / payout receipt.",
+    "notice": "Kindly attach proof of payment or the payout receipt for this sale.",
+    "expectTone": "calm",
+    "expectTypes": ["payment"]
+  },
+  {
+    "id": "notice-comms-chat",
+    "kind": "notice_parse",
+    "description": "Message history request.",
+    "notice": "Provide the email or chat message history with the buyer for this sale.",
+    "expectTone": "calm",
+    "expectTypes": ["comms"]
+  },
+  {
+    "id": "notice-portfolio-shop",
+    "kind": "notice_parse",
+    "description": "Public portfolio / shop link.",
+    "notice": "Share a link to your public portfolio or shop so we can see samples of your work.",
+    "expectTone": "calm",
+    "expectTypes": ["portfolio_link"]
+  },
+  {
+    "id": "notice-restriction-hold",
+    "kind": "notice_parse",
+    "description": "Restriction tone from on-hold language.",
+    "notice": "Your funds are on hold. Please send supporting documents named in this restriction notice.",
+    "expectTone": "restriction",
+    "expectTypes": ["other"]
+  },
+  {
+    "id": "notice-deliverable-tracking",
+    "kind": "notice_parse",
+    "description": "Delivery / tracking proof.",
+    "notice": "Upload proof of delivery or the final work product / deliverable for the buyer.",
+    "expectTone": "calm",
+    "expectTypes": ["deliverable"]
+  },
+  {
+    "id": "completeness-full",
+    "kind": "completeness",
+    "description": "All six checklist types present → 100.",
+    "types": ["contract", "invoice", "payment", "deliverable", "comms", "portfolio_link"],
+    "expectScore": 100,
+    "expectMissing": []
+  },
+  {
+    "id": "completeness-half",
+    "kind": "completeness",
+    "description": "Three of six types → 50.",
+    "types": ["invoice", "payment", "comms"],
+    "expectScore": 50,
+    "expectMissing": ["contract", "deliverable", "portfolio_link"]
+  },
+  {
+    "id": "completeness-empty",
+    "kind": "completeness",
+    "description": "No evidence → 0 and all missing.",
+    "types": [],
+    "expectScore": 0,
+    "expectMissing": ["contract", "invoice", "payment", "deliverable", "comms", "portfolio_link"]
+  },
+  {
+    "id": "completeness-duplicates",
+    "kind": "completeness",
+    "description": "Duplicate types do not inflate the score.",
+    "types": ["invoice", "invoice", "payment", "payment"],
+    "expectScore": 33,
+    "expectMissing": ["contract", "deliverable", "comms", "portfolio_link"]
+  },
+  {
+    "id": "verifier-fabricated-file",
+    "kind": "verifier",
+    "description": "Letter cites a file that was never uploaded — must fail closed.",
+    "letter": "Please find attached contract-never-uploaded.pdf (sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa). This proves we signed an agreement.",
+    "sources": [
+      {
+        "fileName": "invoice-studio.txt",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "type": "invoice",
+        "text": "Invoice for a portrait session. No contract is included."
+      }
+    ],
+    "expectPassed": false,
+    "expectFailedSubstring": "contract-never-uploaded.pdf"
+  },
+  {
+    "id": "verifier-honest-citation",
+    "kind": "verifier",
+    "description": "Letter cites a real vault file and hash — must pass.",
+    "letter": "Hello PayPal. I am sending invoice-studio.txt (sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb). For the contract request I do not have a matching file in the vault.",
+    "sources": [
+      {
+        "fileName": "invoice-studio.txt",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "type": "invoice",
+        "text": "Invoice for a portrait session in Nairobi."
+      }
+    ],
+    "expectPassed": true
+  },
+  {
+    "id": "verifier-bad-hash",
+    "kind": "verifier",
+    "description": "Known filename but fabricated hash — must fail.",
+    "letter": "Attached invoice-studio.txt (sha256: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc) as proof of sale.",
+    "sources": [
+      {
+        "fileName": "invoice-studio.txt",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "type": "invoice",
+        "text": "Invoice text."
+      }
+    ],
+    "expectPassed": false
+  },
+  {
+    "id": "verifier-honest-gap",
+    "kind": "verifier",
+    "description": "Admitting a missing ID document is allowed.",
+    "letter": "For the government ID request I do not have a matching file in the vault. CRAFT does not store identity documents.",
+    "sources": [],
+    "expectPassed": true
+  },
+  {
+    "id": "ownership-export-pass",
+    "kind": "ownership",
+    "description": "Export text containing the challenge code passes.",
+    "mode": "pass"
+  },
+  {
+    "id": "ownership-export-fail",
+    "kind": "ownership",
+    "description": "Export text without the challenge code fails.",
+    "mode": "fail"
+  }
+]

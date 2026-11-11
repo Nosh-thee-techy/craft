@@ -340,9 +340,9 @@ after 1 Oct 2026. Comment all code.
 ```
 
 Acceptance
-- [ ] A fresh clone runs from the README alone
-- [ ] Judge login works with no setup
-- [ ] Eval script prints accuracy and shows the verifier blocking the fabricated claim
+- [x] A fresh clone runs from the README alone
+- [x] Judge login works with no setup
+- [x] Eval script prints accuracy and shows the verifier blocking the fabricated claim
 
 ---
 

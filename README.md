@@ -6,6 +6,34 @@ A PayPal-centred workspace for Kenyan creatives: get paid, prove the work, survi
 
 Built for the PayPal AI Hackathon.
 
+## Judge quick start
+
+```bash
+cp .env.example .env.local
+# set AUTH_SECRET to any long random string; keep APP_URL=http://localhost:3000
+docker compose up -d
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Open [http://localhost:3000/login](http://localhost:3000/login):
+
+| Field | Value |
+| --- | --- |
+| Email | `judge@craft.demo` |
+| Password | `CraftJudge2026!` |
+
+Public trust page after seed: `/t/amina-studio`.
+
+Offline checks (no API keys required):
+
+```bash
+npm test
+npm run eval:suite
+```
+
 ## Brand
 
 Dusk (dark glass) is the default studio. **White mode** is a paper-and-gold light theme — same glass, same type, remembered in the browser. Toggle it from the sun/moon control on the landing page, login, and the app rail.
@@ -14,7 +42,7 @@ The landing map (`#map`) is the second section: a 3×2 pictured board of rooms (
 
 Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
 
-## What works now (Phase 0–6 foundations)
+## What works now
 
 - Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives, AG Grid Community
 - Auth.js email + password login; `(app)` routes are protected
@@ -25,7 +53,8 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Freeze Shield (Phase 3):** paste a PayPal limitation notice → map to vault → draft letter → fail-closed verifier → approve → PDF pack
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
 - **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
-- **Money foundations (Phase 6.1):** refund/dispute columns, ledger approval state, `planner_inputs`, Vitest harness, deterministic **income stability and trust score** + `clientKey` row mapper
+- **Money foundations (Phase 6.1):** refund/dispute columns, ledger approval state, `planner_inputs`, Vitest harness, deterministic **income stability and trust score** + `clientKey` row mapper (rest of Phase 6 owned separately)
+- **Seed + eval (Phase 7):** demo creative, labelled eval suite, judge login
 
 ## Setup
 
@@ -44,15 +73,16 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
    docker compose up -d
    ```
 
-3. Install, migrate, run:
+3. Install, migrate, optionally seed, run:
 
    ```bash
    npm install
    npm run db:migrate
+   npm run db:seed   # optional — loads the judge demo creative
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000), sign up, then visit `/projects`.
+4. Open [http://localhost:3000](http://localhost:3000). Sign up, or use the judge login above.
 
 ## Evidence Vault (Phase 2)
 
@@ -114,11 +144,23 @@ Optional env: `GITHUB_TOKEN`, `YOUTUBE_API_KEY`.
 
 Schema migration `drizzle/0003_phase6_money_inputs.sql` is additive only. The score lives in `lib/scoring/stability.ts` (pure functions, no DB). Row shaping — including the locked **clientKey** rule (prefer normalised client email, else name) — is in `lib/scoring/map-inputs.ts`.
 
-Still to build for the rest of Phase 6: split proposals on payment, forecast timing/cashflow, planner rules + simulate, LLM explain layer, investing simulation, Copilot, and the `/money` UI.
+Still owned separately for the rest of Phase 6: split proposals on payment, forecast timing/cashflow, planner rules + simulate, LLM explain layer, investing simulation, Copilot, and the `/money` UI.
 
 ```bash
 npm test
 ```
+
+## Demo seed + evaluation (Phase 7)
+
+`npm run db:seed` loads `data/seed/demo-creative.json`:
+
+- Judge user **Amina Otieno** (`judge@craft.demo`)
+- 5 projects with intentional evidence gaps
+- Payments, one client-confirmed deliverable, split rules, planner inputs
+- Synthetic `client_payment_history` rows with `is_synthetic=true`
+- A pasted PayPal limitation notice ready for Freeze Shield
+
+`npm run eval:suite` runs 18 labelled cases in `data/eval/suite.json` (notice parse, completeness, verifier, ownership) and prints accuracy. The fabricated-claim case must be blocked.
 
 ## PayPal sandbox (Phase 1)
 
@@ -166,30 +208,54 @@ PayPal Invoicing is often unavailable on Kenya personal/business accounts, inclu
 | `npm test` | Vitest unit suite (completeness, migrations journal, stability score, mappers) |
 | `npm run db:generate` | Create a SQL migration from `lib/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
+| `npm run db:seed` | Load the judge demo creative |
 | `npm run eval:ownership` | Ownership challenge pass/fail fixture |
 | `npm run eval:freeze` | Freeze Shield verifier blocks fabricated claims |
+| `npm run eval:suite` | Phase 7 labelled suite + accuracy |
 
 ## Environment variables
 
-See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in judge docs later.
+See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in judge docs.
 
-## What is real vs not yet built
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | yes | Postgres (local docker defaults in `.env.example`) |
+| `AUTH_SECRET` | yes | Auth.js + vault URL HMAC |
+| `APP_URL` | yes | Absolute links / signed downloads |
+| `PAYPAL_*` | for billing | Sandbox invoicing + webhooks |
+| `LLM_*` | optional | Reader, auditor, Freeze Shield phrasing |
+| `GITHUB_TOKEN` / `YOUTUBE_API_KEY` | optional | Ownership verification |
 
-| Real | Later |
+## What is real vs simulated
+
+| Real | Simulated / not built yet |
 | --- | --- |
-| Login, protected routes, health, schema | Forecast, planner, investing sim, Copilot, `/money` UI |
-| Projects UI, PayPal invoice send, webhook fund | Demo seed + eval set (Phase 7) |
-| Evidence Vault (hash, signed download, auditor) | |
-| Freeze Shield (notice → verify → approve → PDF) | |
-| Delivery, client confirm, public trust page | |
-| Onboarding + verified link ownership | |
-| Income stability and trust score + Phase 6 schema | |
+| Auth, projects, PayPal sandbox invoice + webhook fund | Live PayPal limitation emails (paste a sample instead) |
+| Evidence Vault hashes, timestamps, signed downloads | M-Pesa rails |
+| Freeze Shield parse → verify → approve → PDF | Full money UI / forecast / planner / Copilot (Phase 6 remainder) |
+| Delivery confirm + public trust page | Brokerage / real investing execution |
+| Verified link ownership (not identity) | |
+| Income stability and trust score (code only) | |
+| Demo seed + eval suite | |
 
 The income stability and trust score is **not** a credit score. Investing, when it lands, is educational and simulated.
 
+## Built after 1 Oct 2026
+
+Everything in this repo for the hackathon was built after 1 Oct 2026, including:
+
+- Auth.js email/password studio, branded landing, theme toggle
+- PayPal sandbox invoicing + idempotent webhooks
+- Evidence Vault, reader/auditor, completeness in code
+- Freeze Shield + fail-closed verifier + PDF packs
+- Delivery confirm links and public trust pages
+- Onboarding with verified link ownership
+- Phase 6.1 score/schema foundations
+- Phase 7 demo seed, eval suite, judge login
+
 ## Deploy
 
-A public HTTPS URL is required so PayPal can deliver webhooks. **Fly.io** is the intended host (`fly launch` from this repo when you are ready). `render.yaml` remains as an optional Blueprint. Locally the app runs at `http://localhost:3000`; use a tunnel (ngrok/Cloudflare) against `/api/paypal/webhook` until Fly is live.
+A public HTTPS URL is required so PayPal can deliver webhooks. **Fly.io** is the intended host (`fly launch` from this repo when you are ready). `render.yaml` remains as an optional Blueprint. Keep the demo reachable and free until **15 Dec 2026, 8:00 am PT**. Locally the app runs at `http://localhost:3000`; use a tunnel (ngrok/Cloudflare) against `/api/paypal/webhook` until Fly is live.
 
 ## Licence
 

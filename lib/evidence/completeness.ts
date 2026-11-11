@@ -4,8 +4,8 @@
  * Outputs: score 0–100, present types, missing types.
  *
  * WHY plain code: the LLM may explain the score in words. It never calculates it.
+ * WHY no server-only: Phase 7 eval and Vitest import this under plain Node.
  */
-import "server-only";
 import { EVIDENCE_TYPES, type EvidenceType } from "@/lib/evidence/schemas";
 
 export type Completeness = {

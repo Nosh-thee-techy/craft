@@ -14,12 +14,12 @@ import { logAgentAction } from "@/lib/ai/log";
 import { db } from "@/lib/db/client";
 import { docChunks, evidenceItems, projects } from "@/lib/db/schema";
 import type { EvidenceType } from "@/lib/evidence/schemas";
+import { heuristicParse } from "@/lib/freeze/parse-heuristic";
 import {
   mappingSchema,
   parsedNoticeSchema,
   type EvidenceCite,
   type EvidenceMapping,
-  type NoticeDocType,
   type NoticeRequest,
   type PackDraft,
   type PackIndexItem,
@@ -27,24 +27,7 @@ import {
   type SourceText,
 } from "@/lib/freeze/schemas";
 
-const TYPE_HINTS: { type: NoticeDocType; keywords: string[] }[] = [
-  { type: "invoice", keywords: ["invoice", "bill", "proof of sale", "itemised"] },
-  { type: "payment", keywords: ["payment", "payout", "transaction", "proof of payment", "receipt"] },
-  {
-    type: "contract",
-    keywords: ["contract", "agreement", "statement of work", "sow", "terms"],
-  },
-  {
-    type: "deliverable",
-    keywords: ["deliverable", "delivery", "tracking", "work product", "final files"],
-  },
-  { type: "comms", keywords: ["email", "message", "correspondence", "chat", "conversation"] },
-  {
-    type: "portfolio_link",
-    keywords: ["website", "portfolio", "samples", "instagram", "shop"],
-  },
-  { type: "other", keywords: ["passport", "national id", "government id", "kyc", "selfie"] },
-];
+export { heuristicParse } from "@/lib/freeze/parse-heuristic";
 
 /**
  * Parse a pasted PayPal notice into requests. Heuristics first; LLM may refine.
@@ -75,54 +58,6 @@ export async function parseLimitationNotice(
   });
 
   return parsedNoticeSchema.parse(parsed);
-}
-
-/**
- * Keyword parse so Freeze Shield still works without an LLM key.
- */
-export function heuristicParse(rawText: string): ParsedNotice {
-  const lower = rawText.toLowerCase();
-  const requests: NoticeRequest[] = [];
-
-  for (const hint of TYPE_HINTS) {
-    const hit = hint.keywords.find((keyword) => lower.includes(keyword));
-    if (!hit) {
-      continue;
-    }
-    requests.push({
-      id: hint.type,
-      label: `PayPal asked for ${hit}`,
-      documentType: hint.type,
-      keywords: hint.keywords,
-    });
-  }
-
-  if (requests.length === 0) {
-    requests.push({
-      id: "supporting",
-      label: "Supporting documents named in the notice",
-      documentType: "other",
-      keywords: ["document", "proof"],
-    });
-  }
-
-  const deadlineMatch = rawText.match(
-    /\b(\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|\d{4}-\d{2}-\d{2}|within\s+\d+\s+days)\b/i,
-  );
-
-  let tone: ParsedNotice["tone"] = "calm";
-  if (/\b(limited|limitation|restricted|held|frozen|on hold)\b/i.test(rawText)) {
-    tone = "restriction";
-  } else if (/\b(urgent|immediately|48 hours|24 hours|as soon as)\b/i.test(rawText)) {
-    tone = "urgent";
-  }
-
-  return {
-    deadline: deadlineMatch?.[0] ?? null,
-    tone,
-    summary: rawText.replace(/\s+/g, " ").trim().slice(0, 280),
-    requests,
-  };
 }
 
 type VaultSource = SourceText & {
