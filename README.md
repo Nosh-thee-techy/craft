@@ -62,7 +62,7 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Freeze Shield (Phase 3):** paste a PayPal limitation notice → map to vault → draft letter → fail-closed verifier → approve → PDF pack
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
 - **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
-- **Money foundations (Phase 6.1):** refund/dispute columns, ledger approval state, `planner_inputs`, Vitest harness, deterministic **income stability and trust score** + `clientKey` row mapper (rest of Phase 6 owned separately)
+- **Money (Phase 6):** score, cash-flow band, planner + educational investing range, split proposals on payment (approve/reject), live `/money` UI
 - **Seed + eval (Phase 7):** demo creative, labelled eval suite, judge login
 
 ## Setup
@@ -149,11 +149,21 @@ npm run eval:ownership
 
 Optional env: `GITHUB_TOKEN`, `YOUTUBE_API_KEY`.
 
-## Money foundations (Phase 6.1)
+## Money (Phase 6)
 
-Schema migration `drizzle/0003_phase6_money_inputs.sql` is additive only. The score lives in `lib/scoring/stability.ts` (pure functions, no DB). Row shaping — including the locked **clientKey** rule (prefer normalised client email, else name) — is in `lib/scoring/map-inputs.ts`.
+Schema migration `drizzle/0003_phase6_money_inputs.sql` is additive only. Deterministic modules (LLM explains only; never calculates money):
 
-Still owned separately for the rest of Phase 6: split proposals on payment, forecast timing/cashflow, planner rules + simulate, LLM explain layer, investing simulation, Copilot, and the `/money` UI.
+| Module | Role |
+| --- | --- |
+| `lib/scoring/stability.ts` + `map-inputs.ts` | **Income stability and trust score** (never “credit score”); locked `clientKey` |
+| `lib/ledger/split.ts` + `service.ts` | Split proposals; approve/reject; hooked from PayPal `fundProject` |
+| `lib/forecast/timing.ts` | Days-to-pay windows (default **14 / 30 / 45**) |
+| `lib/forecast/cashflow.ts` | 3-month LOW–HIGH cash-flow band |
+| `lib/planner/rules.ts` | Buffer → debt → invest plan + safe-to-invest |
+| `lib/planner/simulate.ts` | Educational investing **range** (not a promised return) |
+| `lib/money/build-view.ts` + `service.ts` | Compose the Money view; `/money` UI |
+
+Open `/money` after seed to see score, forecast, plan, splits, and the investing range. Copilot / LLM explain layer still optional.
 
 ```bash
 npm test
@@ -241,7 +251,7 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 | --- | --- |
 | Auth, projects, PayPal sandbox invoice + webhook fund | Live PayPal limitation emails (paste a sample instead) |
 | Evidence Vault hashes, timestamps, signed downloads | M-Pesa rails |
-| Freeze Shield parse → verify → approve → PDF | Full money UI / forecast / planner / Copilot (Phase 6 remainder) |
+| Freeze Shield parse → verify → approve → PDF | Copilot / LLM explain over Money numbers (optional) |
 | Delivery confirm + public trust page | Brokerage / real investing execution |
 | Verified link ownership (not identity) | |
 | Income stability and trust score (code only) | |
@@ -259,7 +269,7 @@ Everything in this repo for the hackathon was built after 1 Oct 2026, including:
 - Freeze Shield + fail-closed verifier + PDF packs
 - Delivery confirm links and public trust pages
 - Onboarding with verified link ownership
-- Phase 6.1 score/schema foundations
+- Phase 6 money view, splits, forecast, planner, `/money` UI
 - Phase 7 demo seed, eval suite, judge login
 
 ## Deploy (Fly.io)

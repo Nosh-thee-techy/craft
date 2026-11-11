@@ -17,6 +17,7 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db/client";
 import { invoices, payments, paypalEvents, projects } from "@/lib/db/schema";
+import { proposeSplitsForProjectPayment } from "@/lib/ledger/service";
 import { PAYPAL_VERIFY_PATH, paypalFetch } from "@/lib/paypal/client";
 
 const moneySchema = z.object({
@@ -204,6 +205,13 @@ async function fundProject(params: {
       .update(invoices)
       .set({ status: "paid", paidAt: now, updatedAt: now })
       .where(eq(invoices.id, params.invoiceId));
+  }
+
+  // Propose tax/savings/expenses once the payment exists. Idempotent on (payment, bucket).
+  try {
+    await proposeSplitsForProjectPayment({ projectId: params.projectId });
+  } catch {
+    // Funding must not fail if split rules are missing or invalid — Money UI can preview later.
   }
 }
 

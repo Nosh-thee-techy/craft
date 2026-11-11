@@ -1,10 +1,10 @@
 # CRAFT — progress so far
 
-Snapshot as of **11 Nov 2026**. Built for the PayPal AI Hackathon.
+Snapshot as of **12 Nov 2026**. Built for the PayPal AI Hackathon.
 
 ## In one line
 
-Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, answer a limitation with a verified pack, confirm delivery on a trust page, and (foundations only) score income stability — with a judge demo seed and eval suite ready.
+Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, answer a limitation with a verified pack, confirm delivery on a trust page, and open `/money` for an income stability and trust score, cash-flow band, splits, plan, and educational investing range — with a judge demo seed and eval suite ready.
 
 ## Done by phase
 
@@ -46,12 +46,14 @@ Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, a
 - Wording: **verified link ownership** — never “verified identity”
 - Split rules must total 100% (computed in code)
 
-### Phase 6.1 — Money foundations (Maureen; review approved)
+### Phase 6 — Money
 - Migration `0003`: refund/dispute columns, ledger approval state, `planner_inputs`
-- Vitest harness
-- Deterministic **income stability and trust score** (`lib/scoring/stability.ts`)
-- Locked `clientKey` mapper (`lib/scoring/map-inputs.ts`) for the next money PR
-- **Not done (Maureen owns):** splits on payment, forecast, planner, investing sim, Copilot, `/money` UI
+- Vitest harness; pure score / cashflow / planner / split / timing / simulate modules
+- Deterministic **income stability and trust score** (`lib/scoring/stability.ts`) + locked `clientKey` mapper
+- `buildMoneyView` + `getMoneyViewForUser`; live `/money` UI (sample fallback when empty)
+- Ledger propose on `fundProject` + approve/reject server actions
+- Educational investing range only (never a single promised return)
+- **Still optional:** Copilot / LLM explain layer over the view model
 
 ### Phase 7 — Seed, eval, docs
 - `npm run db:seed` → demo creative **Amina Otieno**
@@ -71,7 +73,7 @@ Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, a
 
 | Owner | Work |
 | --- | --- |
-| Maureen | Rest of Phase 6: split proposals, `forecast/*`, `planner/*`, LLM explain, investing sim, Copilot, `/money` UI |
+| Optional | Copilot / LLM explain layer over the Money view (numbers stay in code) |
 | Team | Public demo URL live through **15 Dec 2026, 8:00 am PT** |
 | Team | Demo video &lt; 3 min on YouTube (script in `CRAFT_BUILD_PLAN.md`) |
 | Team | Hackathon submission text (features + AI tools/models used) |
@@ -106,7 +108,8 @@ npm run eval:ownership
 | `/freeze-shield` | Limitation response pack |
 | `/settings` | Trust visibility |
 | `/t/amina-studio` | Public trust page after seed |
-| `/money`, `/copilot` | Placeholders until Phase 6 finishes |
+| `/money` | Score, forecast band, plan, splits, investing range |
+| `/copilot` | Placeholder (optional explain layer) |
 
 ## Live deploy
 
