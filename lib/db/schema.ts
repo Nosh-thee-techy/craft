@@ -84,6 +84,12 @@ export const users = pgTable(
      * settings can deepen it without another migration.
      */
     trustVisibilityJson: jsonb("trust_visibility_json"),
+    /** AI profile draft from verified link ownership. User must approve. */
+    profileDraftJson: jsonb("profile_draft_json"),
+    profileDraftApprovedAt: timestamp("profile_draft_approved_at", { withTimezone: true }),
+    /** PayPal sandbox connection marker (client id last-4 only; never store secrets here). */
+    paypalSandboxConnectedAt: timestamp("paypal_sandbox_connected_at", { withTimezone: true }),
+    onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
@@ -104,6 +110,8 @@ export const linkedAccounts = pgTable(
     handle: text("handle").notNull(),
     url: text("url").notNull(),
     challengeCode: text("challenge_code"),
+    /** Public metadata fetched after verified link ownership. Never private files. */
+    publicDataJson: jsonb("public_data_json"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     status: linkedAccountStatusEnum("status").notNull().default("pending"),
     ...timestamps,
