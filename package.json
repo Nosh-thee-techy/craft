@@ -4,7 +4,8 @@
   "private": true,
   "description": "CRAFT — Creators' Records, Assurance, Funds & Trust. PayPal-centred workspace for Kenyan creatives.",
   "scripts": {
-    "test": "node ./tests/completeness.test.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -45,6 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }
