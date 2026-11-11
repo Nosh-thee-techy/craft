@@ -4,7 +4,7 @@
  * Outputs: welcome copy plus doors into live and upcoming rooms.
  */
 import Link from "next/link";
-import { Archive, FolderKanban, Shield, Sparkles, Wallet } from "lucide-react";
+import { Archive, FolderKanban, Shield, Sparkles } from "lucide-react";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/brand/page-header";
 import { Button } from "@/components/ui/button";
