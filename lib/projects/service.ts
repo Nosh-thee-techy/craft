@@ -63,6 +63,7 @@ function toProjectRow(row: typeof projects.$inferSelect): ProjectRow {
     amount: row.amount,
     status: row.status,
     trustSlug: row.trustSlug,
+    showOnTrust: row.showOnTrust,
     createdAt: row.createdAt.toISOString(),
   };
 }
