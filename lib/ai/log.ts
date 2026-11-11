@@ -13,6 +13,7 @@ export type AgentLogInput = {
   input: unknown;
   output?: unknown;
   verifierPassed?: boolean | null;
+  approvedByUser?: boolean;
 };
 
 /**
@@ -27,6 +28,7 @@ export async function logAgentAction(entry: AgentLogInput): Promise<string> {
       inputJson: entry.input,
       outputJson: entry.output ?? null,
       verifierPassed: entry.verifierPassed ?? null,
+      approvedByUser: entry.approvedByUser ?? false,
     })
     .returning({ id: agentActions.id });
 
