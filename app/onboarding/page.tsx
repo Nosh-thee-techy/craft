@@ -1,31 +1,37 @@
 /**
- * Purpose: Onboarding shell. Protected by Proxy + this page's auth check.
+ * Purpose: Multi-step onboarding — profile, PayPal, verified link ownership, draft, money, visibility.
  * Inputs: Auth.js session.
- * Outputs: placeholder until Phase 5.
+ * Outputs: the Phase 5 wizard.
  */
 import { redirect } from "next/navigation";
-import { Compass } from "lucide-react";
 import { auth } from "@/auth";
+import { env } from "@/lib/env";
+import { getOnboardingSnapshot } from "@/lib/onboarding/service";
 import { PublicChrome } from "@/components/brand/public-chrome";
-import { PhasePlaceholder } from "@/components/phase-placeholder";
+import { OnboardingWizard } from "@/components/onboarding/wizard";
 
-/** Onboarding placeholder. */
+/**
+ * First-light setup. Steps are skippable; verified link ownership is the honesty core.
+ */
 export default async function OnboardingPage() {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect("/login");
   }
+
+  const snapshot = await getOnboardingSnapshot(session.user.id);
 
   return (
     <main className="mx-auto flex min-h-full max-w-3xl flex-col gap-8 px-5 py-12">
       <PublicChrome href="/dashboard" />
-      <PhasePlaceholder
-        kicker="First light"
-        title="Onboarding"
-        phase={5}
-        icon={<Compass className="size-6" strokeWidth={1.6} />}
-        description="Multi-step setup: profile, PayPal sandbox, verified link ownership, an AI profile draft, money setup, and what the world can see."
-      />
+      <div>
+        <p className="text-xs uppercase tracking-[0.28em] text-primary">First light</p>
+        <h1 className="mt-2 font-display text-4xl tracking-tight md:text-5xl">Onboarding</h1>
+        <p className="mt-3 text-sm text-muted-foreground md:text-base">
+          Set up your studio. We say verified link ownership — never verified identity.
+        </p>
+      </div>
+      <OnboardingWizard snapshot={snapshot} appUrl={env.APP_URL} />
     </main>
   );
 }
