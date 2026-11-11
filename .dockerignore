@@ -1,0 +1,14 @@
+# Purpose: Keep the Fly/Docker build context small and secret-free.
+node_modules
+.next
+.git
+.data
+.env
+.env.*
+!.env.example
+coverage
+.cursor
+.vscode
+agent-transcripts
+*.md
+!README.md

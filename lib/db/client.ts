@@ -13,10 +13,15 @@ import { env } from "@/lib/env";
 import * as schema from "@/lib/db/schema";
 
 /**
- * Decide whether the connection string points at a local Postgres.
+ * Decide whether TLS should stay off (local docker, Fly 6PN `.internal`, or explicit disable).
  */
 function isLocalDatabase(url: string): boolean {
-  return url.includes("localhost") || url.includes("127.0.0.1");
+  return (
+    url.includes("localhost") ||
+    url.includes("127.0.0.1") ||
+    url.includes(".internal") ||
+    /[?&]sslmode=disable\b/i.test(url)
+  );
 }
 
 const sql = postgres(env.DATABASE_URL, {

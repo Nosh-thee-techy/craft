@@ -6,7 +6,23 @@ A PayPal-centred workspace for Kenyan creatives: get paid, prove the work, survi
 
 Built for the PayPal AI Hackathon.
 
-## Judge quick start
+## Live demo (Fly.io)
+
+**App:** [https://craft-studio-ke.fly.dev](https://craft-studio-ke.fly.dev)  
+**Health:** [https://craft-studio-ke.fly.dev/api/health](https://craft-studio-ke.fly.dev/api/health)  
+**PayPal webhook URL:** `https://craft-studio-ke.fly.dev/api/paypal/webhook`
+
+| Field | Value |
+| --- | --- |
+| Email | `judge@craft.demo` |
+| Password | `CraftJudge2026!` |
+
+Public trust page after seed: [https://craft-studio-ke.fly.dev/t/amina-studio](https://craft-studio-ke.fly.dev/t/amina-studio).
+
+Redeploy web: `fly deploy -c fly.toml -a craft-studio-ke`  
+Postgres (pgvector) is `craft-studio-ke-db` (`fly.db.toml`). Vault files live on Fly volume `craft_vault`.
+
+## Judge quick start (local)
 
 ```bash
 cp .env.example .env.local
@@ -18,14 +34,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000/login](http://localhost:3000/login):
-
-| Field | Value |
-| --- | --- |
-| Email | `judge@craft.demo` |
-| Password | `CraftJudge2026!` |
-
-Public trust page after seed: `/t/amina-studio`.
+Open [http://localhost:3000/login](http://localhost:3000/login) with the same judge credentials above.
 
 Offline checks (no API keys required):
 
@@ -253,9 +262,24 @@ Everything in this repo for the hackathon was built after 1 Oct 2026, including:
 - Phase 6.1 score/schema foundations
 - Phase 7 demo seed, eval suite, judge login
 
-## Deploy
+## Deploy (Fly.io)
 
-A public HTTPS URL is required so PayPal can deliver webhooks. **Fly.io** is the intended host (`fly launch` from this repo when you are ready). `render.yaml` remains as an optional Blueprint. Keep the demo reachable and free until **15 Dec 2026, 8:00 am PT**. Locally the app runs at `http://localhost:3000`; use a tunnel (ngrok/Cloudflare) against `/api/paypal/webhook` until Fly is live.
+The demo runs on Fly:
+
+| Resource | Name |
+| --- | --- |
+| Web app | `craft-studio-ke` → https://craft-studio-ke.fly.dev |
+| Postgres + pgvector | `craft-studio-ke-db` (private `.internal` only) |
+| Vault volume | `craft_vault` → `/app/.data` |
+
+```bash
+fly deploy -c fly.toml -a craft-studio-ke
+fly deploy -c fly.db.toml -a craft-studio-ke-db   # only if the DB image changes
+```
+
+Set runtime secrets with `fly secrets set -a craft-studio-ke` (`DATABASE_URL`, `AUTH_SECRET`, `APP_URL`, optional PayPal/LLM keys). Internal Postgres URLs use `sslmode=disable` (no TLS on Fly 6PN).
+
+`render.yaml` remains as an optional Blueprint. Keep the demo reachable and free until **15 Dec 2026, 8:00 am PT**.
 
 ## Licence
 

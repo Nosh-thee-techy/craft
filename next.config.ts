@@ -11,6 +11,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // WHY standalone: Fly Docker image only needs `.next/standalone` + static assets.
+  output: "standalone",
   cacheComponents: false,
   turbopack: {
     // WHY: a package-lock.json exists in the parent home directory; pin the

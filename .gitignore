@@ -46,3 +46,8 @@ next-env.d.ts
 
 # local vault files (signed downloads; never commit user evidence)
 .data/
+
+# Fly deploy scratch (passwords / URLs — never commit)
+.fly-pg-pass.tmp
+.fly-dburl.tmp
+

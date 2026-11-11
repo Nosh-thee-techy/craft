@@ -1,0 +1,119 @@
+# CRAFT — progress so far
+
+Snapshot as of **11 Nov 2026**. Built for the PayPal AI Hackathon.
+
+## In one line
+
+Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, answer a limitation with a verified pack, confirm delivery on a trust page, and (foundations only) score income stability — with a judge demo seed and eval suite ready.
+
+## Done by phase
+
+### Phase 0 — Foundations
+- Next.js App Router (TypeScript strict), Tailwind, shadcn/ui, AG Grid Community
+- Auth.js email + password; protected `(app)` routes
+- Drizzle + Postgres/pgvector schema for the full plan tables
+- `GET /api/health`, env via typed config, MIT licence
+- Branded landing (dusk/light themes, map, marquees)
+
+### Phase 1 — PayPal sandbox round trip
+- Create project → send sandbox invoice from the UI
+- Webhook marks project `funded` (`INVOICING.INVOICE.PAID` / capture completed)
+- Idempotent event handling (unique PayPal event id)
+- Kenya workaround documented (US sandbox Business + Personal buyer)
+
+### Phase 2 — Evidence Vault
+- Private upload to local vault (`.data/vault`), SHA-256 + server timestamp
+- HMAC-signed downloads, checklist completeness **in code** (LLM never scores)
+- Optional LLM reader/auditor when `LLM_API_KEY` is set
+- AI only reads uploads — never creates or invents evidence
+
+### Phase 3 — Freeze Shield
+- Paste PayPal limitation notice → parse → map to vault → draft letter
+- Fail-closed verifier (`lib/ai/claim-check.ts` + `lib/ai/verifier.ts`)
+- Human approve → PDF pack export (`pdf-lib`)
+- Identity docs PayPal may ask for stay **missing** on purpose
+- Live at `/freeze-shield`
+
+### Phase 4 — Delivery + trust
+- Mark delivered, hash as `deliverable`, optional publish links
+- Match-check vs brief (AI/heuristic)
+- Client confirm at `/c/[token]` (no login)
+- Public trust page at `/t/[slug]` with visibility controls
+
+### Phase 5 — Onboarding + verified link ownership
+- Multi-step onboarding (profile, PayPal marker, links, draft, splits, visibility)
+- Challenge codes for GitHub / YouTube / RSS / export
+- Wording: **verified link ownership** — never “verified identity”
+- Split rules must total 100% (computed in code)
+
+### Phase 6.1 — Money foundations (Maureen; review approved)
+- Migration `0003`: refund/dispute columns, ledger approval state, `planner_inputs`
+- Vitest harness
+- Deterministic **income stability and trust score** (`lib/scoring/stability.ts`)
+- Locked `clientKey` mapper (`lib/scoring/map-inputs.ts`) for the next money PR
+- **Not done (Maureen owns):** splits on payment, forecast, planner, investing sim, Copilot, `/money` UI
+
+### Phase 7 — Seed, eval, docs
+- `npm run db:seed` → demo creative **Amina Otieno**
+  - Login: `judge@craft.demo` / `CraftJudge2026!`
+  - 5 projects (evidence gaps), payments, synthetic history (`is_synthetic=true`), pasted notice
+- `npm run eval:suite` → 18 labelled cases, **100%**, fabricated claim blocked
+- README: judge quick start, env table, real vs simulated, built-after-1-Oct list
+
+## Product rules we kept
+- Money, splits, scores, forecasts → deterministic code; LLM explains only
+- AI never invents evidence
+- Outbound packs pass the verifier; export needs verify + user approve
+- Agent steps logged to append-only `agent_actions`
+- Say “income stability and trust score”, never “credit score”
+
+## What’s left
+
+| Owner | Work |
+| --- | --- |
+| Maureen | Rest of Phase 6: split proposals, `forecast/*`, `planner/*`, LLM explain, investing sim, Copilot, `/money` UI |
+| Team | Public demo URL live through **15 Dec 2026, 8:00 am PT** |
+| Team | Demo video &lt; 3 min on YouTube (script in `CRAFT_BUILD_PLAN.md`) |
+| Team | Hackathon submission text (features + AI tools/models used) |
+| Optional | Wire PayPal sandbox on the hosted demo; smoke-test judge login there |
+
+## How to run what we built
+
+```bash
+cp .env.example .env.local   # set AUTH_SECRET; APP_URL=http://localhost:3000
+docker compose up -d
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Checks:
+
+```bash
+npm test
+npm run eval:suite
+npm run eval:freeze
+npm run eval:ownership
+```
+
+## Key paths
+
+| Path | Role |
+| --- | --- |
+| `/projects` | Bill + project detail |
+| `/vault` | Evidence |
+| `/freeze-shield` | Limitation response pack |
+| `/settings` | Trust visibility |
+| `/t/amina-studio` | Public trust page after seed |
+| `/money`, `/copilot` | Placeholders until Phase 6 finishes |
+
+## Live deploy
+
+- **URL:** https://craft-studio-ke.fly.dev
+- **Judge login:** `judge@craft.demo` / `CraftJudge2026!`
+- Fly apps: `craft-studio-ke` (Next.js) + `craft-studio-ke-db` (pgvector)
+
+## Repo note
+
+Work is on `main` at [Nosh-thee-techy/craft](https://github.com/Nosh-thee-techy/craft). Phase 6 foundations landed via PR #1; Freeze Shield and Phase 7 followed on `main`.

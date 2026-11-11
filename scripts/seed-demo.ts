@@ -15,6 +15,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import type { EvidenceType } from "../lib/evidence/schemas";
 import * as schema from "../lib/db/schema";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -148,7 +149,11 @@ async function main(): Promise<void> {
   ) as SeedFile;
   const noticeText = readFileSync(join(root, seed.limitationNoticeFile), "utf8");
 
-  const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
+  const isLocal =
+    url.includes("localhost") ||
+    url.includes("127.0.0.1") ||
+    url.includes(".internal") ||
+    /[?&]sslmode=disable\b/i.test(url);
   const sql = postgres(url, { max: 1, ssl: isLocal ? false : "require" });
   const db = drizzle(sql, { schema });
 
@@ -243,7 +248,7 @@ async function main(): Promise<void> {
         .insert(schema.evidenceItems)
         .values({
           projectId: row.id,
-          type: type as schema.evidenceItems.$inferInsert["type"],
+          type: type as EvidenceType,
           storageKey,
           sha256: digest,
           extractedText: body,

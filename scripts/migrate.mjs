@@ -45,7 +45,11 @@ if (!url) {
   throw new Error("DATABASE_URL is required to run migrations.");
 }
 
-const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
+const isLocal =
+  url.includes("localhost") ||
+  url.includes("127.0.0.1") ||
+  url.includes(".internal") ||
+  /[?&]sslmode=disable\b/i.test(url);
 const sql = postgres(url, { max: 1, ssl: isLocal ? false : "require" });
 const db = drizzle(sql);
 

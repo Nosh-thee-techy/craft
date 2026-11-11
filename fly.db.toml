@@ -1,0 +1,22 @@
+# Purpose: Unmanaged Postgres with pgvector for CRAFT (schema needs vector).
+# Inputs: POSTGRES_PASSWORD secret; volume craft_pg_data; deploy/db image.
+# Outputs: postgres on craft-studio-ke-db.internal:5432 (private 6PN only).
+app = "craft-studio-ke-db"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "deploy/db/Dockerfile"
+
+[env]
+  POSTGRES_USER = "craft"
+  POSTGRES_DB = "craft"
+  PGDATA = "/data/pgdata"
+
+[[mounts]]
+  source = "craft_pg_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
