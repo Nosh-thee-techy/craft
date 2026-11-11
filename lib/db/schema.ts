@@ -7,8 +7,10 @@
  * and must not leak a row count. WHY numeric for money: never store currency
  * in floating point. WHY created_at/updated_at on every table: audit trail.
  */
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -55,6 +57,19 @@ export const ledgerBucketEnum = pgEnum("ledger_bucket", [
   "tax",
   "savings",
   "expenses",
+]);
+
+/** Where a payment stands with PayPal's dispute process. `none` means never disputed. */
+export const disputeStatusEnum = pgEnum("dispute_status", ["none", "open", "won", "lost"]);
+
+/**
+ * A split proposal starts as `proposed`. Only the creative moves it to
+ * `approved` or `rejected`; code never approves on their behalf.
+ */
+export const ledgerEntryStatusEnum = pgEnum("ledger_entry_status", [
+  "proposed",
+  "approved",
+  "rejected",
 ]);
 
 export const packStatusEnum = pgEnum("pack_status", [
@@ -189,11 +204,27 @@ export const payments = pgTable(
     currency: text("currency").notNull().default("USD"),
     receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
     source: text("source").notNull(),
+    /**
+     * Running total refunded against this payment (partial refunds accumulate;
+     * paypal_events.event_id idempotency stops a replayed event double-counting).
+     * Feeds the refund-rate component of the stability score.
+     */
+    refundedAmount: numeric("refunded_amount", { precision: 12, scale: 2 })
+      .notNull()
+      .default("0"),
+    refundedAt: timestamp("refunded_at", { withTimezone: true }),
+    /** Dispute state for the stability score's dispute-rate component. */
+    disputeStatus: disputeStatusEnum("dispute_status").notNull().default("none"),
+    disputedAt: timestamp("disputed_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
     index("payments_project_idx").on(table.projectId),
     uniqueIndex("payments_paypal_capture_id_uidx").on(table.paypalCaptureId),
+    check(
+      "payments_refund_within_amount",
+      sql`${table.refundedAmount} >= 0 AND ${table.refundedAmount} <= ${table.amount}`,
+    ),
   ],
 );
 
@@ -309,7 +340,11 @@ export const splitRules = pgTable(
   (table) => [uniqueIndex("split_rules_user_uidx").on(table.userId)],
 );
 
-/** Allocations of a payment into tax / savings / expenses buckets. */
+/**
+ * Allocations of a payment into tax / savings / expenses buckets. Rows start as
+ * `proposed` (rules in code); the creative approves or rejects them.
+ * One row per (payment, bucket) so a webhook retry cannot propose twice.
+ */
 export const ledgerEntries = pgTable(
   "ledger_entries",
   {
@@ -322,11 +357,59 @@ export const ledgerEntries = pgTable(
       .references(() => payments.id, { onDelete: "cascade" }),
     bucket: ledgerBucketEnum("bucket").notNull(),
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    status: ledgerEntryStatusEnum("status").notNull().default("proposed"),
+    /** Percentage of the payment this bucket got, copied from split_rules at proposal time. */
+    pctApplied: numeric("pct_applied", { precision: 5, scale: 2 }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
     index("ledger_entries_user_idx").on(table.userId),
     index("ledger_entries_payment_idx").on(table.paymentId),
+    uniqueIndex("ledger_entries_payment_bucket_uidx").on(table.paymentId, table.bucket),
+    check("ledger_entries_amount_nonneg", sql`${table.amount} >= 0`),
+    check(
+      "ledger_entries_approved_has_date",
+      sql`(${table.status} = 'approved') = (${table.approvedAt} IS NOT NULL)`,
+    ),
+  ],
+);
+
+/** One debt the creative owes. Money is a decimal string like every other amount. */
+export type PlannerDebt = {
+  label: string;
+  balance: string;
+  minMonthly: string;
+  /** Annual interest rate in percent. Use 0 for interest-free (informal) debt. */
+  aprPct: number;
+};
+
+/**
+ * What the planner rules need from the creative: essentials, current buffer, debts.
+ * One row per user. No defaults on the two amounts: a row means they were entered.
+ * `currency` is the currency of those amounts (KES by default).
+ */
+export const plannerInputs = pgTable(
+  "planner_inputs",
+  {
+    id: uuid("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    currency: text("currency").notNull().default("KES"),
+    monthlyEssentialExpenses: numeric("monthly_essential_expenses", {
+      precision: 12,
+      scale: 2,
+    }).notNull(),
+    currentBuffer: numeric("current_buffer", { precision: 12, scale: 2 }).notNull(),
+    /** Validate with zod before writing; the DB only guarantees valid JSON. */
+    debtsJson: jsonb("debts_json").$type<PlannerDebt[]>().notNull().default([]),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("planner_inputs_user_uidx").on(table.userId),
+    check("planner_inputs_expenses_nonneg", sql`${table.monthlyEssentialExpenses} >= 0`),
+    check("planner_inputs_buffer_nonneg", sql`${table.currentBuffer} >= 0`),
   ],
 );
 
