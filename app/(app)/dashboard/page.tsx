@@ -34,7 +34,7 @@ const DOORS = [
   {
     href: "/freeze-shield",
     icon: Shield,
-    kicker: "Soon",
+    kicker: "Live",
     title: "Freeze Shield",
     copy: "If PayPal holds your money, answer with your vault files.",
   },

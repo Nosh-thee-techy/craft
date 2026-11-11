@@ -1,20 +1,48 @@
 /**
- * Purpose: Freeze Shield shell.
- * Inputs: none yet.
- * Outputs: placeholder room.
+ * Purpose: Freeze Shield — paste a PayPal limitation notice and build a verified pack.
+ * Inputs: signed-in session; optional sample notice on disk; latest pack row.
+ * Outputs: notice form + mapping/letter/approve/export UI.
  */
-import { Shield } from "lucide-react";
-import { PhasePlaceholder } from "@/components/phase-placeholder";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { PageHeader } from "@/components/brand/page-header";
+import { FreezeNoticeForm } from "@/components/freeze/notice-form";
+import { requireUserId } from "@/lib/auth/session";
+import { latestPackForUser, toFormState } from "@/lib/freeze/service";
 
-/** Freeze Shield placeholder. */
-export default function FreezeShieldPage() {
+/**
+ * Freeze Shield room. Export stays off until the verifier passes and the user approves.
+ */
+export default async function FreezeShieldPage() {
+  const userId = await requireUserId();
+  const latest = await latestPackForUser(userId);
+  const sampleNotice = await loadSampleNotice();
+
   return (
-    <PhasePlaceholder
-      kicker="Assurance"
-      title="Freeze Shield"
-      phase={3}
-      icon={<Shield className="size-6" strokeWidth={1.6} />}
-      description="Paste a PayPal limitation notice, map it to vault items, verify every claim, and walk out with a pack a human can read."
-    />
+    <div>
+      <PageHeader
+        kicker="Assurance"
+        title="Freeze Shield"
+        lede="Paste a PayPal limitation notice. CRAFT maps it to vault files you uploaded, checks every claim, and only then lets you approve and export a pack."
+      />
+      <FreezeNoticeForm
+        sampleNotice={sampleNotice}
+        initialPack={latest ? toFormState(latest) : null}
+      />
+    </div>
   );
+}
+
+/**
+ * Optional sample notice for demos. Missing file is fine — the textarea stays empty.
+ */
+async function loadSampleNotice(): Promise<string | undefined> {
+  try {
+    return await readFile(
+      join(process.cwd(), "data/eval/paypal-limitation-notice.txt"),
+      "utf8",
+    );
+  } catch {
+    return undefined;
+  }
 }

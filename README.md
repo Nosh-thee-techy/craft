@@ -14,7 +14,7 @@ The landing map (`#map`) is the second section: a 3×2 pictured board of rooms (
 
 Login and signup are a split studio door: a Nairobi photographer at work on one side, the form on the other.
 
-## What works now (Phase 0–2, 4–5)
+## What works now (Phase 0–5)
 
 - Next.js App Router (TypeScript strict), Tailwind, shadcn/ui primitives, AG Grid Community
 - Auth.js email + password login; `(app)` routes are protected
@@ -22,10 +22,9 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - `GET /api/health`
 - **PayPal sandbox round trip:** create a project, send an invoice, webhook marks it `funded`
 - **Evidence Vault:** private upload, SHA-256, server timestamp, signed download, checklist score (in code), optional LLM reader/auditor
+- **Freeze Shield (Phase 3):** paste a PayPal limitation notice → map to vault → draft letter → fail-closed verifier → approve → PDF pack
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
 - **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
-
-Phase 3 (Freeze Shield) is owned separately and is not in this branch of work.
 
 ## Setup
 
@@ -61,6 +60,22 @@ Open `/vault` after you have a project. Files land in `.data/vault` locally (git
 Set `LLM_API_KEY` (and optional `LLM_MODEL`, `LLM_BASE_URL`) to enable vision/JSON extraction and embeddings into `doc_chunks`. Without a key, uploads still hash and store; the auditor lists missing checklist types in plain language.
 
 The AI only reads uploaded bytes. It cannot create evidence rows.
+
+## Freeze Shield (Phase 3)
+
+Open `/freeze-shield` when PayPal limits an account. Paste the notice (a sample lives at `data/eval/paypal-limitation-notice.txt`). CRAFT:
+
+1. Parses the ask (heuristic without an LLM key; LLM may refine)
+2. Maps each request onto vault files by type, keywords, and optional pgvector neighbours
+3. Drafts a cover letter that cites only uploaded filenames and SHA-256 hashes
+4. Runs the fail-closed verifier (`lib/ai/claim-check.ts` + `lib/ai/verifier.ts`) — fabricated files/hashes block export
+5. Requires human approval, then builds a PDF pack (`lib/pdf/pack.ts`) into the private vault
+
+Identity documents PayPal may request stay **missing** on purpose — CRAFT does not store them. Money is never calculated in this flow.
+
+```bash
+npm run eval:freeze
+```
 
 ## Delivery, confirm, trust (Phase 4)
 
@@ -140,6 +155,7 @@ PayPal Invoicing is often unavailable on Kenya personal/business accounts, inclu
 | `npm run db:generate` | Create a SQL migration from `lib/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
 | `npm run eval:ownership` | Ownership challenge pass/fail fixture |
+| `npm run eval:freeze` | Freeze Shield verifier blocks fabricated claims |
 
 ## Environment variables
 
@@ -149,9 +165,10 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 | Real | Later |
 | --- | --- |
-| Login, protected routes, health, schema | Freeze Shield + verifier (Phase 3, separate) |
-| Projects UI, PayPal invoice send, webhook fund | Score, forecast, copilot (Phase 6) |
-| Evidence Vault (hash, signed download, auditor) | Demo seed + eval set (Phase 7) |
+| Login, protected routes, health, schema | Score, forecast, copilot (Phase 6) |
+| Projects UI, PayPal invoice send, webhook fund | Demo seed + eval set (Phase 7) |
+| Evidence Vault (hash, signed download, auditor) | |
+| Freeze Shield (notice → verify → approve → PDF) | |
 | Delivery, client confirm, public trust page | |
 | Onboarding + verified link ownership | |
 

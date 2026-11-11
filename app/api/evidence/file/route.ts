@@ -25,10 +25,11 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     const object = await getEvidenceObject(key);
+    const fileName = key.split("/").pop() || "download";
     return new NextResponse(new Uint8Array(object.bytes), {
       headers: {
         "Content-Type": object.contentType,
-        "Content-Disposition": "attachment",
+        "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "private, no-store",
       },
     });

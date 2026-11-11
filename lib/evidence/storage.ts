@@ -38,7 +38,17 @@ export async function getEvidenceObject(key: string): Promise<StoredObject> {
   assertSafeKey(key);
   const path = localPath(key);
   const bytes = await readFile(path);
-  return { key, bytes, contentType: "application/octet-stream" };
+  return { key, bytes, contentType: contentTypeForKey(key) };
+}
+
+/**
+ * Guess a Content-Type from the object key. Packs are PDFs; vault uploads stay generic.
+ */
+function contentTypeForKey(key: string): string {
+  if (key.toLowerCase().endsWith(".pdf")) {
+    return "application/pdf";
+  }
+  return "application/octet-stream";
 }
 
 /**

@@ -1,0 +1,15 @@
+{
+  "name": "fabricated-contract-claim",
+  "description": "Letter cites a contract file and hash that were never uploaded. The verifier must fail closed.",
+  "letter": "Hello PayPal. Please find attached contract-never-uploaded.pdf (sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa). This proves we signed an agreement on 1 January 2020. I have also attached invoice-studio.txt (sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb).",
+  "sources": [
+    {
+      "fileName": "invoice-studio.txt",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "type": "invoice",
+      "text": "Invoice for a portrait session in Nairobi. Amount is listed on the file. No contract is included."
+    }
+  ],
+  "expectPassed": false,
+  "expectFailedSubstring": "contract-never-uploaded.pdf"
+}
