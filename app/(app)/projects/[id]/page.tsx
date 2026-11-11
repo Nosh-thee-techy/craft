@@ -7,7 +7,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireUserId } from "@/lib/auth/session";
+import { listDeliverables } from "@/lib/delivery/service";
 import { getProjectForUser, listInvoices, listPayments } from "@/lib/projects/service";
+import { DeliverForm } from "@/components/delivery/deliver-form";
 import { SendInvoiceButton } from "@/components/projects/send-invoice-button";
 import { StatusPill } from "@/components/brand/status-pill";
 import { Button } from "@/components/ui/button";
@@ -34,10 +36,16 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
     notFound();
   }
 
-  const [invoiceRows, paymentRows] = await Promise.all([
+  const [invoiceRows, paymentRows, deliveryRows] = await Promise.all([
     listInvoices(project.id),
     listPayments(project.id),
+    listDeliverables(userId, project.id),
   ]);
+  const canDeliver =
+    project.status === "funded" ||
+    project.status === "delivered" ||
+    project.status === "closed" ||
+    paymentRows.length > 0;
 
   return (
     <div className="space-y-8">
@@ -78,9 +86,12 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
           <CardContent className="space-y-5">
             <p className="text-sm leading-relaxed">{project.scope}</p>
             <dl className="grid gap-1 text-sm">
-              <dt className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Trust slug</dt>
+              <dt className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Project slug</dt>
               <dd className="font-mono text-xs text-primary">{project.trustSlug}</dd>
             </dl>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/settings">Trust page visibility</Link>
+            </Button>
             <SendInvoiceButton
               projectId={project.id}
               disabled={
@@ -161,6 +172,12 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
           </CardContent>
         </Card>
       </div>
+
+      <DeliverForm
+        projectId={project.id}
+        canDeliver={canDeliver}
+        deliverables={deliveryRows}
+      />
     </div>
   );
 }
