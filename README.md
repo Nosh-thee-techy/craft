@@ -63,6 +63,7 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
 - **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
 - **Money (Phase 6):** score, cash-flow band, planner + educational investing range, split proposals on payment (approve/reject), live `/money` UI
+- **Layer 1 (work security):** studio profile home, Work Proof Tokens (hash certificates), scan-to-verify QR on `/t/[slug]`, client verify card before billing
 - **Seed + eval (Phase 7):** demo creative, labelled eval suite, judge login
 
 ## Setup
@@ -128,6 +129,17 @@ On a funded project, open the detail page and upload the final file. CRAFT:
 5. Lets you choose visibility under **Settings** for `/t/[slug]` (counts, portfolio, quote button)
 
 Private vault files are never exposed on confirm or trust pages. Portfolio links and publish URLs are the only outbound file references.
+
+## Layer 1 — secure the work (profile → verify → bill)
+
+Hackathon spine (Korva-style work security):
+
+1. **Stabilize profile** on `/dashboard` — verified link ownership + Work Proof Tokens (SHA-256 certificates, not tradeable NFTs)
+2. **Client verifies** by scanning the QR or opening `/t/[slug]`
+3. **Bill** from `/projects` (verify card sits above Send invoice)
+4. **Deliver** → hash mint → client confirms at `/c/[token]` → proof feeds the public page
+
+Wording stays **verified link ownership** / **work provenance** — never verified identity.
 
 ## Onboarding + verified link ownership (Phase 5)
 

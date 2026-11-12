@@ -7,6 +7,20 @@
     "country": "KE",
     "publicSlug": "amina-studio"
   },
+  "verifiedLinks": [
+    {
+      "platform": "github",
+      "handle": "amina-otieno",
+      "url": "https://github.com/amina-otieno",
+      "challengeCode": "CRAFT-DEMO-GITHUB"
+    },
+    {
+      "platform": "rss",
+      "handle": "amina.studio",
+      "url": "https://example.com/amina-studio/feed.xml",
+      "challengeCode": "CRAFT-DEMO-RSS"
+    }
+  ],
   "splitRules": { "taxPct": "30.00", "savingsPct": "20.00", "expensesPct": "50.00" },
   "plannerInputs": {
     "currency": "USD",

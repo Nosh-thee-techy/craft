@@ -43,6 +43,12 @@ type SeedFile = {
     country: string;
     publicSlug: string;
   };
+  verifiedLinks?: {
+    platform: string;
+    handle: string;
+    url: string;
+    challengeCode: string;
+  }[];
   splitRules: { taxPct: string; savingsPct: string; expensesPct: string };
   plannerInputs: {
     currency: string;
@@ -187,6 +193,19 @@ async function main(): Promise<void> {
     .returning();
   if (!user) {
     throw new Error("Failed to insert demo user.");
+  }
+
+  for (const link of seed.verifiedLinks ?? []) {
+    await db.insert(schema.linkedAccounts).values({
+      userId: user.id,
+      platform: link.platform,
+      handle: link.handle,
+      url: link.url,
+      challengeCode: link.challengeCode,
+      status: "verified",
+      verifiedAt: new Date(),
+      publicDataJson: { seeded: true, note: "Demo verified link ownership" },
+    });
   }
 
   await db.insert(schema.splitRules).values({

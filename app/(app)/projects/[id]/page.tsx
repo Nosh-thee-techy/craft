@@ -9,6 +9,8 @@ import { ArrowLeft } from "lucide-react";
 import { requireUserId } from "@/lib/auth/session";
 import { listDeliverables } from "@/lib/delivery/service";
 import { getProjectForUser, listInvoices, listPayments } from "@/lib/projects/service";
+import { getClientVerifyCard } from "@/lib/studio/profile";
+import { ClientVerifyCard } from "@/components/studio/client-verify-card";
 import { DeliverForm } from "@/components/delivery/deliver-form";
 import { SendInvoiceButton } from "@/components/projects/send-invoice-button";
 import { StatusPill } from "@/components/brand/status-pill";
@@ -36,10 +38,11 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
     notFound();
   }
 
-  const [invoiceRows, paymentRows, deliveryRows] = await Promise.all([
+  const [invoiceRows, paymentRows, deliveryRows, verifyCard] = await Promise.all([
     listInvoices(project.id),
     listPayments(project.id),
     listDeliverables(userId, project.id),
+    getClientVerifyCard(userId),
   ]);
   const canDeliver =
     project.status === "funded" ||
@@ -70,6 +73,16 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
           </Button>
         </div>
       </div>
+
+      {verifyCard ? (
+        <ClientVerifyCard
+          trustUrl={verifyCard.trustUrl}
+          qrDataUrl={verifyCard.qrDataUrl}
+          publicSlug={verifyCard.publicSlug}
+          verifiedLinkCount={verifyCard.verifiedLinkCount}
+          publishedProofCount={verifyCard.publishedProofCount}
+        />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

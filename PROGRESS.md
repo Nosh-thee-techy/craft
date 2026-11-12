@@ -4,7 +4,7 @@ Snapshot as of **12 Nov 2026**. Built for the PayPal AI Hackathon.
 
 ## In one line
 
-Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, answer a limitation with a verified pack, confirm delivery on a trust page, and open `/money` for an income stability and trust score, cash-flow band, splits, plan, and educational investing range — with a judge demo seed and eval suite ready.
+Kenyan creatives stabilize a verified studio profile with Work Proof Tokens, let clients scan-to-verify, then bill via PayPal, deliver with hashes, confirm receipt, defend freezes with a verified pack, and open `/money` for an income stability and trust score — with a judge demo seed and eval suite ready.
 
 ## Done by phase
 
@@ -45,6 +45,12 @@ Kenyan creatives can sign in, bill via PayPal sandbox, store proof in a vault, a
 - Challenge codes for GitHub / YouTube / RSS / export
 - Wording: **verified link ownership** — never “verified identity”
 - Split rules must total 100% (computed in code)
+
+### Layer 1 — Profile + scan-to-verify (hackathon spine)
+- Dashboard is profile-first: verified links, Work Proof Tokens (hash certificates), QR
+- Public `/t/[slug]` shows link ownership + published proofs; clients scan before paying
+- Project detail includes a **client verify card** above Send invoice
+- Seed includes demo verified links for Amina
 
 ### Phase 6 — Money
 - Migration `0003`: refund/dispute columns, ledger approval state, `planner_inputs`
@@ -103,11 +109,12 @@ npm run eval:ownership
 
 | Path | Role |
 | --- | --- |
-| `/projects` | Bill + project detail |
+| `/dashboard` | Layer 1 studio profile + Work Proof Tokens + QR |
+| `/projects` | Bill + project detail (client verify card first) |
 | `/vault` | Evidence |
 | `/freeze-shield` | Limitation response pack |
 | `/settings` | Trust visibility |
-| `/t/amina-studio` | Public trust page after seed |
+| `/t/amina-studio` | Public scan-to-verify page after seed |
 | `/money` | Score, forecast band, plan, splits, investing range |
 | `/copilot` | Placeholder (optional explain layer) |
 
