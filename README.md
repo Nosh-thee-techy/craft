@@ -259,6 +259,8 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 
 The income stability and trust score is **not** a credit score. Investing, when it lands, is educational and simulated.
 
+**Known limitation: one currency per account.** The Money view adds amounts as plain numbers and does not convert between currencies (for example USD payments against KES spending). Keep payments and planner inputs in the same currency. The demo seed uses USD throughout, and `tests/seed-consistency.test.ts` fails if they ever differ.
+
 ## Built after 1 Oct 2026
 
 Everything in this repo for the hackathon was built after 1 Oct 2026, including:
