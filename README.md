@@ -64,6 +64,7 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
 - **Money (Phase 6):** score, cash-flow band, planner + educational investing range, split proposals on payment (approve/reject), live `/money` UI
 - **Layer 1 (work security):** studio profile home, Work Proof Tokens (hash certificates), scan-to-verify QR on `/t/[slug]`, client verify card before billing
+- **Rehema (studio guide):** Kabla-style bottom-right helper that explains each room once per session, then collapses to “Ask Rehema”
 - **Seed + eval (Phase 7):** demo creative, labelled eval suite, judge login
 
 ## Setup

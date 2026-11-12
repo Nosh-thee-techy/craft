@@ -51,6 +51,7 @@ Kenyan creatives stabilize a verified studio profile with Work Proof Tokens, let
 - Public `/t/[slug]` shows link ownership + published proofs; clients scan before paying
 - Project detail includes a **client verify card** above Send invoice
 - Seed includes demo verified links for Amina
+- **Rehema** studio guide (Kabla Karani pattern): bottom-right explainer per room, once per session
 
 ### Phase 6 — Money
 - Migration `0003`: refund/dispute columns, ledger approval state, `planner_inputs`

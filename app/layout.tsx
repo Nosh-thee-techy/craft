@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { Fraunces, Geist_Mono, Outfit, Syne } from "next/font/google";
 import { Atmosphere } from "@/components/brand/atmosphere";
 import { ThemeProvider } from "@/components/brand/theme-provider";
+import { StudioGuide } from "@/components/guide/studio-guide";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -53,6 +54,7 @@ export default function RootLayout({
         <ThemeProvider>
           <Atmosphere />
           <div className="relative z-10 min-h-dvh min-w-0">{children}</div>
+          <StudioGuide />
         </ThemeProvider>
       </body>
     </html>
