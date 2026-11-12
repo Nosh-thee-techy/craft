@@ -27,11 +27,11 @@ export function ClientVerifyCard({
 }: ClientVerifyCardProps) {
   return (
     <section className="rounded-[28px] border border-teal/30 bg-teal/8 p-5 md:p-6">
-      <p className="text-xs uppercase tracking-[0.22em] text-teal">Before you bill</p>
+      <p className="text-xs uppercase tracking-[0.22em] text-teal">Layer 2 · Before you bill</p>
       <h2 className="mt-2 font-display text-2xl tracking-tight">Client verify card</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Share this so the client can scan or open your public page, check verified link ownership
-        and Work Proof Tokens, then trust the invoice.
+        Layer 2 starts with trust: share this so the client can scan or open your public page, check
+        verified link ownership and Work Proof Tokens, then pay the invoice.
       </p>
 
       <div className="mt-5 flex flex-wrap items-start gap-6">

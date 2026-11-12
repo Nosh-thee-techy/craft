@@ -29,8 +29,8 @@ export function ProfileBoard({ profile }: ProfileBoardProps) {
               {displayName}, prove the work first.
             </h2>
             <p className="mt-4 text-sm text-muted-foreground md:text-base">
-              Stabilize your profile and Work Proof Tokens (hash-bound certificates). Clients scan to
-              verify link ownership and provenance — then you bill, deliver, and collect confirmation.
+              Layer 1: stabilize profile + Work Proof Tokens, let clients scan to verify. Layer 2:
+              bill → vault → deliver → client confirms (Freeze Shield and Money use that trail).
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
               Wording: verified link ownership and work provenance — never verified identity.
@@ -151,11 +151,14 @@ export function ProfileBoard({ profile }: ProfileBoardProps) {
         </article>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Room href="/projects" icon={FolderKanban} title="Bill a client" copy="Share verify QR, then send the PayPal bill." />
-        <Room href="/vault" icon={Archive} title="Vault" copy="Keep contracts, comms, and hashes private." />
-        <Room href="/freeze-shield" icon={Shield} title="Freeze Shield" copy="If PayPal holds funds, answer with proofs." />
-        <Room href="/money" icon={Wallet} title="Money" copy="Score and plan after the work trail exists." />
+      <section className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.22em] text-accent">Layer 2 · Secure the job</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Room href="/projects" icon={FolderKanban} title="1 · Bill" copy="Share verify QR, then send the PayPal bill." />
+          <Room href="/vault" icon={Archive} title="2 · Vault" copy="Keep contracts, comms, and hashes private." />
+          <Room href="/freeze-shield" icon={Shield} title="3 · Freeze" copy="If PayPal holds funds, answer with proofs." />
+          <Room href="/money" icon={Wallet} title="4 · Money" copy="Score, splits, and plan after jobs land." />
+        </div>
       </section>
     </div>
   );

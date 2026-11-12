@@ -131,14 +131,19 @@ On a funded project, open the detail page and upload the final file. CRAFT:
 
 Private vault files are never exposed on confirm or trust pages. Portfolio links and publish URLs are the only outbound file references.
 
-## Layer 1 — secure the work (profile → verify → bill)
-
-Hackathon spine (Korva-style work security):
+## Layer 1 — profile + scan-to-verify
 
 1. **Stabilize profile** on `/dashboard` — verified link ownership + Work Proof Tokens (SHA-256 certificates, not tradeable NFTs)
 2. **Client verifies** by scanning the QR or opening `/t/[slug]`
-3. **Bill** from `/projects` (verify card sits above Send invoice)
-4. **Deliver** → hash mint → client confirms at `/c/[token]` → proof feeds the public page
+
+## Layer 2 — secure the job (bill → proof → confirm)
+
+1. **Bill** from `/projects` (verify card sits above Send invoice)
+2. PayPal webhook → project `funded` + split proposals
+3. **Vault** evidence (hashes + timestamps; AI never invents files)
+4. **Deliver** → Work Proof Token from SHA-256 → share `/c/[token]`
+5. Client confirms → trust page updates
+6. Side paths: **Freeze Shield** if limited; **Money** for score / splits / plan
 
 Wording stays **verified link ownership** / **work provenance** — never verified identity.
 

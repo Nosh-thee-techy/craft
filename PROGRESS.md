@@ -53,6 +53,12 @@ Kenyan creatives stabilize a verified studio profile with Work Proof Tokens, let
 - Seed includes demo verified links for Amina
 - **Rehema** studio guide (Kabla Karani pattern): bottom-right explainer per room, once per session
 
+### Layer 2 — Secure the job
+- Bill → funded webhook + splits → vault → deliver (WPT) → `/c/[token]` confirm → trust updates
+- Freeze Shield defends limited funds with vault proof + fail-closed verifier
+- Money consumes the job trail (score, forecast, splits, educational invest range)
+- Dashboard Layer 2 door strip + Rehema cues labeled for the job loop
+
 ### Phase 6 — Money
 - Migration `0003`: refund/dispute columns, ledger approval state, `planner_inputs`
 - Vitest harness; pure score / cashflow / planner / split / timing / simulate modules
