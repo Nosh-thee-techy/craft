@@ -9,11 +9,11 @@
   },
   "splitRules": { "taxPct": "30.00", "savingsPct": "20.00", "expensesPct": "50.00" },
   "plannerInputs": {
-    "currency": "KES",
-    "monthlyEssentialExpenses": "45000.00",
-    "currentBuffer": "12000.00",
+    "currency": "USD",
+    "monthlyEssentialExpenses": "400.00",
+    "currentBuffer": "2000.00",
     "debtsJson": [
-      { "label": "Camera loan", "balance": "80000.00", "minMonthly": "5000.00", "aprPct": 14 }
+      { "label": "Camera loan", "balance": "100.00", "minMonthly": "40.00", "aprPct": 14 }
     ]
   },
   "projects": [
@@ -85,6 +85,8 @@
     { "clientName": "Okello Wedding", "invoiceDaysAgo": 70, "paidDaysAfter": 2 },
     { "clientName": "Coast Cafe", "invoiceDaysAgo": 95, "paidDaysAfter": 11 },
     { "clientName": "Coast Cafe", "invoiceDaysAgo": 160, "paidDaysAfter": 9 },
+    { "clientName": "Kanga Collective", "invoiceDaysAgo": 85, "paidDaysAfter": 5 },
+    { "clientName": "Kanga Collective", "invoiceDaysAgo": 150, "paidDaysAfter": 6 },
     { "clientName": "Kanga Collective", "invoiceDaysAgo": 20, "paidDaysAfter": null }
   ],
   "limitationNoticeFile": "data/eval/paypal-limitation-notice.txt"
