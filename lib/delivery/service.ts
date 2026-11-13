@@ -53,6 +53,7 @@ export async function deliverProject(
     .insert(evidenceItems)
     .values({
       id: evidenceId,
+      userId,
       projectId,
       type: "deliverable",
       storageKey: key,

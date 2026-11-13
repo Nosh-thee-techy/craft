@@ -146,6 +146,7 @@ export async function loadMoneyViewInput(
 
   const typesByProject = new Map<string, string[]>();
   for (const row of evidenceRows) {
+    if (!row.projectId) continue;
     const list = typesByProject.get(row.projectId) ?? [];
     list.push(row.type);
     typesByProject.set(row.projectId, list);

@@ -180,9 +180,9 @@ function MapCard({ node }: { node: Node }) {
   return (
     <Link
       href={node.href}
-      className={`glass glass-hover group flex min-w-0 flex-col overflow-hidden rounded-[22px] no-underline ${ring}`}
+      className={`glass-panel glass-hover group flex min-w-0 flex-col overflow-hidden rounded-[22px] no-underline ${ring}`}
     >
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
         <Image
           src={node.image}
           alt={node.alt}
@@ -194,8 +194,8 @@ function MapCard({ node }: { node: Node }) {
           {node.step}
         </span>
       </div>
-      <div className="p-3 md:p-4">
-        <h3 className="font-display text-lg tracking-tight">{node.title}</h3>
+      <div className="map-card-copy border-t border-border/50 p-3 md:p-4">
+        <h3 className="font-display text-lg tracking-tight text-foreground">{node.title}</h3>
         <p className="mt-1 text-sm leading-snug text-muted-foreground">{node.copy}</p>
       </div>
     </Link>

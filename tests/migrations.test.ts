@@ -40,8 +40,8 @@ describe("drizzle journal", () => {
     expect(new Set(stamps).size).toBe(stamps.length);
   });
 
-  it("registers the Phase 6 money-inputs migration last", () => {
-    expect(journal.entries.at(-1)?.tag).toBe("0003_phase6_money_inputs");
+  it("registers the Phase 2 invoice-location migration last", () => {
+    expect(journal.entries.at(-1)?.tag).toBe("0008_phase2_invoice_location");
   });
 
   it("has no orphan .sql files outside the journal", () => {

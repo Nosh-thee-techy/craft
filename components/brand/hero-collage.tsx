@@ -32,7 +32,7 @@ export function HeroCollage() {
       {SHOTS.map((shot) => (
         <div
           key={shot.src}
-          className={`glass absolute overflow-hidden rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${shot.className}`}
+          className={`glass-panel absolute overflow-hidden rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${shot.className}`}
         >
           <div className="relative aspect-[4/3] w-full">
             <Image

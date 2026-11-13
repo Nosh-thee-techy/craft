@@ -38,8 +38,16 @@ export async function saveProfileAction(
   const userId = await requireUserId();
   const parsed = profileStepSchema.safeParse({
     name: formData.get("name"),
+    legalName: formData.get("legalName") || "",
     craft: formData.get("craft"),
     country: formData.get("country") || "KE",
+    addressEstate: formData.get("addressEstate") || "",
+    addressRoad: formData.get("addressRoad") || "",
+    addressBuilding: formData.get("addressBuilding") || "",
+    addressLandmark: formData.get("addressLandmark") || "",
+    addressTown: formData.get("addressTown") || "",
+    addressCounty: formData.get("addressCounty") || "",
+    plusCode: formData.get("plusCode") || "",
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Check your profile." };

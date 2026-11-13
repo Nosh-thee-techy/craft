@@ -45,6 +45,12 @@ export const evidenceTypeEnum = pgEnum("evidence_type", [
   "deliverable",
   "comms",
   "portfolio_link",
+  // Phase 2 account-level (Kenya-reported PayPal asks).
+  "id_document",
+  "address_proof",
+  "bank_statement",
+  "source_of_funds",
+  "employment_proof",
 ]);
 
 export const linkedAccountStatusEnum = pgEnum("linked_account_status", [
@@ -89,9 +95,23 @@ export const users = pgTable(
     id: uuid("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     email: text("email").notNull(),
     name: text("name"),
+    /** Legal name for ID / bill consistency checks (Phase 2). */
+    legalName: text("legal_name"),
     craft: text("craft"),
     country: text("country").notNull().default("KE"),
     passwordHash: text("password_hash"),
+    /** Canonical Kenya address — typed once; invoices snapshot it. */
+    addressEstate: text("address_estate"),
+    addressRoad: text("address_road"),
+    addressBuilding: text("address_building"),
+    addressLandmark: text("address_landmark"),
+    addressTown: text("address_town"),
+    addressCounty: text("address_county"),
+    plusCode: text("plus_code"),
+    /** Short income / source statement for readiness (not a credit score). */
+    incomeStatement: text("income_statement"),
+    /** User attests a local bank or card is linked in PayPal — we cannot see PayPal. */
+    bankLinkedAttested: boolean("bank_linked_attested").notNull().default(false),
     /** Public /t/[slug] handle. Null until the creative opens a trust page. */
     publicSlug: text("public_slug"),
     /**
@@ -178,6 +198,17 @@ export const invoices = pgTable(
     status: text("status").notNull().default("draft"),
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
     currency: text("currency").notNull().default("USD"),
+    /** Typed location fields — no GPS/IP capture (Phase 2 D). */
+    clientCountry: text("client_country"),
+    clientCity: text("client_city"),
+    clientCompany: text("client_company"),
+    deliveryMode: text("delivery_mode"),
+    workLocation: text("work_location"),
+    /**
+     * Snapshot of the seller's canonical address at invoice time.
+     * Written once; never updated when the profile changes later.
+     */
+    sellerLocationSnapshot: jsonb("seller_location_snapshot"),
     sentAt: timestamp("sent_at", { withTimezone: true }),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     ...timestamps,
@@ -245,24 +276,42 @@ export const paypalEvents = pgTable(
   (table) => [uniqueIndex("paypal_events_event_id_uidx").on(table.eventId)],
 );
 
-/** Vault items. The AI may only read these; it never creates rows. */
+/**
+ * Vault items. The AI may only read these; it never creates rows.
+ * Account-level rows (ID, address, bank, …) have null projectId and never
+ * appear on public trust or client-confirm routes.
+ */
 export const evidenceItems = pgTable(
   "evidence_items",
   {
     id: uuid("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    projectId: uuid("project_id")
+    /** Owner of the row. Required so account-level files work without a project. */
+    userId: uuid("user_id")
       .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Null for account-level Identity and funds documents. */
+    projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
     type: evidenceTypeEnum("type").notNull(),
     storageKey: text("storage_key"),
     sha256: text("sha256"),
     extractedText: text("extracted_text"),
     extractedJson: jsonb("extracted_json"),
+    /** AI-read fields stay unused by readiness until the user confirms. */
+    extractedConfirmed: boolean("extracted_confirmed").notNull().default(false),
+    holderName: text("holder_name"),
+    issuer: text("issuer"),
+    addressText: text("address_text"),
+    docDate: timestamp("doc_date", { withTimezone: true }),
+    /** For address proof: typically doc_date + 90 days. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
     addedBy: uuid("added_by").references(() => users.id, { onDelete: "set null" }),
     addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
     ...timestamps,
   },
-  (table) => [index("evidence_items_project_idx").on(table.projectId)],
+  (table) => [
+    index("evidence_items_project_idx").on(table.projectId),
+    index("evidence_items_user_idx").on(table.userId),
+  ],
 );
 
 /** Final files delivered to a client, with optional one-click confirmation. */
@@ -302,6 +351,11 @@ export const limitationNotices = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     rawText: text("raw_text").notNull(),
     parsedJson: jsonb("parsed_json"),
+    /** Calendar deadline when the notice gave a parseable date (Phase 2 F2). */
+    deadlineAt: timestamp("deadline_at", { withTimezone: true }),
+    /** User-set case progress after export (exported/sent/waiting/resolved/rejected). */
+    caseStatus: text("case_status"),
+    statusUpdatedAt: timestamp("status_updated_at", { withTimezone: true }),
     receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
     ...timestamps,
   },
@@ -318,6 +372,10 @@ export const responsePacks = pgTable(
       .references(() => limitationNotices.id, { onDelete: "cascade" }),
     status: packStatusEnum("status").notNull().default("draft"),
     pdfKey: text("pdf_key"),
+    /** ZIP bundle with letter, index, originals, manifest (Phase 2 E). */
+    bundleKey: text("bundle_key"),
+    /** Last preflight result JSON (blocks export when not ok). */
+    preflightJson: jsonb("preflight_json"),
     verifierReportJson: jsonb("verifier_report_json"),
     ...timestamps,
   },

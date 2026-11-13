@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireUserId } from "@/lib/auth/session";
 import { listDeliverables } from "@/lib/delivery/service";
 import { getProjectForUser, listInvoices, listPayments } from "@/lib/projects/service";
+import { precheckProjectInvoice } from "@/lib/readiness/invoice-precheck-service";
 import { getClientVerifyCard } from "@/lib/studio/profile";
 import { ClientVerifyCard } from "@/components/studio/client-verify-card";
 import { DeliverForm } from "@/components/delivery/deliver-form";
@@ -37,6 +38,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
   if (!project) {
     notFound();
   }
+  const invoiceFlags = await precheckProjectInvoice(userId, id);
 
   const [invoiceRows, paymentRows, deliveryRows, verifyCard] = await Promise.all([
     listInvoices(project.id),
@@ -107,6 +109,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
             </Button>
             <SendInvoiceButton
               projectId={project.id}
+              initialFlags={invoiceFlags}
               disabled={
                 project.status === "funded" ||
                 project.status === "delivered" ||

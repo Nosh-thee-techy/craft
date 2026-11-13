@@ -7,15 +7,15 @@
  */
 import { describe, expect, it } from "vitest";
 import { completenessFromTypes } from "@/lib/evidence/completeness";
-import { EVIDENCE_TYPES } from "@/lib/evidence/schemas";
+import { PROJECT_EVIDENCE_TYPES } from "@/lib/evidence/schemas";
 
 describe("completenessFromTypes", () => {
-  it("scores an empty vault 0 and lists every type as missing", () => {
+  it("scores an empty vault 0 and lists every project type as missing", () => {
     const result = completenessFromTypes([]);
     expect(result.score).toBe(0);
     expect(result.present).toEqual([]);
-    expect(result.missing).toEqual([...EVIDENCE_TYPES]);
-    expect(result.total).toBe(EVIDENCE_TYPES.length);
+    expect(result.missing).toEqual([...PROJECT_EVIDENCE_TYPES]);
+    expect(result.total).toBe(PROJECT_EVIDENCE_TYPES.length);
   });
 
   it("scores 3 of 6 checklist types as 50", () => {
@@ -26,7 +26,7 @@ describe("completenessFromTypes", () => {
   });
 
   it("scores a full checklist 100 with nothing missing", () => {
-    const result = completenessFromTypes([...EVIDENCE_TYPES]);
+    const result = completenessFromTypes([...PROJECT_EVIDENCE_TYPES]);
     expect(result.score).toBe(100);
     expect(result.missing).toEqual([]);
   });
@@ -37,15 +37,15 @@ describe("completenessFromTypes", () => {
     expect(many.score).toBe(once.score);
   });
 
-  it("ignores strings that are not checklist types", () => {
-    const result = completenessFromTypes(["contract", "selfie", ""]);
+  it("ignores strings that are not project checklist types", () => {
+    const result = completenessFromTypes(["contract", "selfie", "id_document", ""]);
     expect(result.score).toBe(17);
     expect(result.present).toEqual(["contract"]);
   });
 
   it("rounds to the nearest whole percent", () => {
     const scoreFor = (count: number) =>
-      completenessFromTypes(EVIDENCE_TYPES.slice(0, count)).score;
+      completenessFromTypes(PROJECT_EVIDENCE_TYPES.slice(0, count)).score;
     expect([1, 2, 4, 5].map(scoreFor)).toEqual([17, 33, 67, 83]);
   });
 

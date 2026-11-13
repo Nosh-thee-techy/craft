@@ -1,16 +1,21 @@
 /**
  * Purpose: Evidence Vault — hashed uploads, checklist, ledger, auditor.
  * Inputs: signed-in user; optional `project` query.
- * Outputs: the Phase 2 vault workspace scoped to one project.
+ * Outputs: project vault plus private Identity and funds section.
  */
 import { requireUserId } from "@/lib/auth/session";
 import { completenessFromTypes } from "@/lib/evidence/completeness";
-import { listEvidence, projectCompleteness } from "@/lib/evidence/service";
+import {
+  listAccountEvidence,
+  listEvidence,
+  projectCompleteness,
+} from "@/lib/evidence/service";
 import { listProjects } from "@/lib/projects/service";
 import { PageHeader } from "@/components/brand/page-header";
 import { AuditorPanel } from "@/components/vault/auditor-panel";
 import { EvidenceChecklist } from "@/components/vault/checklist";
 import { EvidenceGrid } from "@/components/vault/evidence-grid";
+import { IdentityFundsSection } from "@/components/vault/identity-funds";
 import { ProjectSwitcher } from "@/components/vault/project-switcher";
 import { VaultUploadForm } from "@/components/vault/upload-form";
 
@@ -19,7 +24,8 @@ type VaultPageProps = {
 };
 
 /**
- * Load one project's ledger. Completeness is code, not the LLM.
+ * Load one project's ledger plus account-level Identity files.
+ * Completeness is code, not the LLM.
  */
 export default async function VaultPage({ searchParams }: VaultPageProps) {
   const userId = await requireUserId();
@@ -28,6 +34,7 @@ export default async function VaultPage({ searchParams }: VaultPageProps) {
   const selected = projects.find((project) => project.id === requestedId) ?? projects[0];
 
   const rows = selected ? await listEvidence(userId, selected.id) : [];
+  const accountRows = await listAccountEvidence(userId);
   const completeness = selected
     ? ((await projectCompleteness(userId, selected.id)) ?? completenessFromTypes([]))
     : completenessFromTypes([]);
@@ -39,6 +46,7 @@ export default async function VaultPage({ searchParams }: VaultPageProps) {
         title="Evidence Vault"
         lede="Save files here. Each one gets a hash and a time. The AI can only read what you upload."
       />
+      <IdentityFundsSection rows={accountRows} />
       <ProjectSwitcher projects={projects} selectedId={selected?.id ?? ""} />
       <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <EvidenceChecklist completeness={completeness} />

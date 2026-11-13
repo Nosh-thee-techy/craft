@@ -45,9 +45,11 @@ export async function getEvidenceObject(key: string): Promise<StoredObject> {
  * Guess a Content-Type from the object key. Packs are PDFs; vault uploads stay generic.
  */
 function contentTypeForKey(key: string): string {
-  if (key.toLowerCase().endsWith(".pdf")) {
-    return "application/pdf";
-  }
+  const lower = key.toLowerCase();
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".zip")) return "application/zip";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
   return "application/octet-stream";
 }
 

@@ -7,7 +7,11 @@
 
 import { useActionState } from "react";
 import { addPortfolioLinkAction, uploadEvidenceAction } from "@/lib/evidence/actions";
-import { EVIDENCE_TYPES, type EvidenceFormState } from "@/lib/evidence/schemas";
+import {
+  EVIDENCE_TYPE_LABELS,
+  PROJECT_EVIDENCE_TYPES,
+  type EvidenceFormState,
+} from "@/lib/evidence/schemas";
 import type { ProjectRow } from "@/lib/projects/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +27,8 @@ import {
 
 const initial: EvidenceFormState = {};
 
-const FILE_TYPES = EVIDENCE_TYPES.filter((type) => type !== "portfolio_link");
+/** Project vault only — account types live under Identity and funds. */
+const FILE_TYPES = PROJECT_EVIDENCE_TYPES.filter((type) => type !== "portfolio_link");
 
 type UploadFormProps = {
   projects: ProjectRow[];
@@ -71,7 +76,7 @@ export function VaultUploadForm({ projects, selectedProjectId }: UploadFormProps
               >
                 {FILE_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {type.replace("_", " ")}
+                    {EVIDENCE_TYPE_LABELS[type]}
                   </option>
                 ))}
               </select>

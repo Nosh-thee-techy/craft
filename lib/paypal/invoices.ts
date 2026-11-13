@@ -14,6 +14,10 @@ import { db } from "@/lib/db/client";
 import { invoices, projects, users } from "@/lib/db/schema";
 import { paypalFetch, paypalErrorMessage, PayPalApiError } from "@/lib/paypal/client";
 import { formatMoney } from "@/lib/projects/service";
+import {
+  buildSellerLocationSnapshot,
+  snapshotToPayPalAddress,
+} from "@/lib/readiness/seller-snapshot";
 
 type CreateInvoiceResponse = {
   id?: string;
@@ -78,8 +82,22 @@ export async function createAndSendInvoice(userId: string, projectId: string): P
   }
 
   const [owner] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  const givenName = owner?.name?.split(" ")[0] ?? "Creative";
-  const surname = owner?.name?.split(" ").slice(1).join(" ") || "CRAFT";
+  const displayName = owner?.legalName || owner?.name || "Creative CRAFT";
+  const givenName = displayName.split(" ")[0] ?? "Creative";
+  const surname = displayName.split(" ").slice(1).join(" ") || "CRAFT";
+  const sellerSnapshot = buildSellerLocationSnapshot({
+    legalName: owner?.legalName,
+    name: owner?.name,
+    country: owner?.country,
+    addressEstate: owner?.addressEstate,
+    addressRoad: owner?.addressRoad,
+    addressBuilding: owner?.addressBuilding,
+    addressLandmark: owner?.addressLandmark,
+    addressTown: owner?.addressTown,
+    addressCounty: owner?.addressCounty,
+    plusCode: owner?.plusCode,
+  });
+  const invoicerAddress = snapshotToPayPalAddress(sellerSnapshot);
 
   let paypalInvoiceId = existing?.paypalInvoiceId ?? null;
 
@@ -100,6 +118,7 @@ export async function createAndSendInvoice(userId: string, projectId: string): P
               given_name: givenName.slice(0, 140),
               surname: surname.slice(0, 140),
             },
+            ...(invoicerAddress ? { address: invoicerAddress } : {}),
           },
           primary_recipients: [
             {
@@ -145,6 +164,7 @@ export async function createAndSendInvoice(userId: string, projectId: string): P
   let invoiceId = existing?.id;
 
   if (existing) {
+    // seller_location_snapshot is immutable — set only if the draft row has none yet.
     await db
       .update(invoices)
       .set({
@@ -152,6 +172,9 @@ export async function createAndSendInvoice(userId: string, projectId: string): P
         status: "sent",
         sentAt: now,
         updatedAt: now,
+        ...(existing.sellerLocationSnapshot
+          ? {}
+          : { sellerLocationSnapshot: sellerSnapshot }),
       })
       .where(eq(invoices.id, existing.id));
     invoiceId = existing.id;
@@ -164,6 +187,7 @@ export async function createAndSendInvoice(userId: string, projectId: string): P
         status: "sent",
         amount: project.amount,
         currency: project.currency,
+        sellerLocationSnapshot: sellerSnapshot,
         sentAt: now,
       })
       .returning();

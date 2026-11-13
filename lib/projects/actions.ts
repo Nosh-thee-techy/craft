@@ -60,10 +60,12 @@ export async function sendInvoiceAction(
   void formData;
   const userId = await requireUserId();
   try {
+    const { precheckProjectInvoice } = await import("@/lib/readiness/invoice-precheck-service");
+    const flags = await precheckProjectInvoice(userId, projectId);
     await createAndSendInvoice(userId, projectId);
     revalidatePath(`/projects/${projectId}`);
     revalidatePath("/projects");
-    return { ok: true };
+    return { ok: true, flags };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Could not send the invoice.",

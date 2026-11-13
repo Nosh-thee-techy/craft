@@ -8,8 +8,11 @@ import { evidenceTypeSchema } from "@/lib/evidence/schemas";
 
 export const MAX_NOTICE_CHARS = 20_000;
 
-/** PayPal may ask for ID we do not store; that request is always missing. */
-export const noticeDocTypeSchema = z.union([evidenceTypeSchema, z.literal("other")]);
+/**
+ * Notice request types match vault evidence types (project + account-level).
+ * The catch-all `other` was removed in Phase 2 F1 so ID/address/bank requests map.
+ */
+export const noticeDocTypeSchema = evidenceTypeSchema;
 
 export type NoticeDocType = z.infer<typeof noticeDocTypeSchema>;
 
@@ -23,7 +26,10 @@ export const noticeRequestSchema = z.object({
 export type NoticeRequest = z.infer<typeof noticeRequestSchema>;
 
 export const parsedNoticeSchema = z.object({
+  /** Original deadline phrase from the notice (display). */
   deadline: z.string().nullable(),
+  /** ISO calendar date (YYYY-MM-DD) when parsing succeeds; null if unknown. */
+  deadlineAt: z.string().nullable().optional(),
   tone: z.enum(["calm", "urgent", "restriction"]),
   summary: z.string(),
   requests: z.array(noticeRequestSchema).min(1),

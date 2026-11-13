@@ -4,13 +4,14 @@
  * Outputs: interrupt-once card, then a corner badge. Soft pages skip the dim overlay.
  *
  * WHY: a pinned footer helper fell below the fold in Kabla — same fix here.
+ * State resets via `key={guide.cue}` so we never sync open/steps from an effect.
  */
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { guideForPath } from "@/lib/guide/cues";
+import { guideForPath, type GuideCue } from "@/lib/guide/cues";
 import { Button } from "@/components/ui/button";
 
 const SEEN_KEY = "craft-rehema-seen";
@@ -42,24 +43,27 @@ function markSeen(cue: string): void {
 export function StudioGuide() {
   const pathname = usePathname() || "/";
   const guide = guideForPath(pathname);
-  const [open, setOpen] = useState(false);
-  const [steps, setSteps] = useState(false);
-  const [voiceOn, setVoiceOn] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
+  return <StudioGuideCard key={guide.cue} guide={guide} />;
+}
 
-  useEffect(() => {
-    setVoiceOn(localStorage.getItem(VOICE_KEY) === "on");
-  }, []);
-
-  useEffect(() => {
-    setSteps(false);
+/**
+ * One cue's card. Remounts when the cue changes so open/steps start fresh.
+ */
+function StudioGuideCard({ guide }: { guide: GuideCue }) {
+  const [open, setOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
     if (!seenCues().has(guide.cue)) {
-      setOpen(true);
       markSeen(guide.cue);
-    } else {
-      setOpen(false);
+      return true;
     }
-  }, [guide.cue]);
+    return false;
+  });
+  const [steps, setSteps] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(VOICE_KEY) === "on";
+  });
+  const [speaking, setSpeaking] = useState(false);
 
   const hush = useCallback(() => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -77,8 +81,13 @@ export function StudioGuide() {
   }, [guide.say, hush]);
 
   useEffect(() => {
-    if (open && voiceOn) speak();
-    if (!open) hush();
+    if (!open) {
+      const timer = window.setTimeout(() => hush(), 0);
+      return () => window.clearTimeout(timer);
+    }
+    if (!voiceOn) return;
+    const timer = window.setTimeout(() => speak(), 0);
+    return () => window.clearTimeout(timer);
   }, [open, voiceOn, speak, hush]);
 
   useEffect(() => {
@@ -102,7 +111,7 @@ export function StudioGuide() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full py-1 pl-1 pr-3 shadow-lg transition hover:-translate-y-0.5"
+        className="glass-panel fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full py-1 pl-1 pr-3 shadow-lg transition hover:-translate-y-0.5"
         aria-label="Ask Rehema"
         data-testid="rehema-button"
       >
@@ -126,7 +135,7 @@ export function StudioGuide() {
         aria-modal={guide.soft ? undefined : true}
         aria-labelledby="rehema-title"
         data-testid="rehema-card"
-        className="glass fixed bottom-4 right-4 z-50 w-[min(26rem,calc(100vw-2rem))] overflow-hidden rounded-[24px] shadow-xl"
+        className="glass-panel fixed bottom-4 right-4 z-50 w-[min(26rem,calc(100vw-2rem))] overflow-hidden rounded-[24px] shadow-xl"
       >
         <div className="flex items-start gap-3 p-4">
           <RehemaFace size={52} />

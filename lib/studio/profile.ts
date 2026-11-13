@@ -16,6 +16,7 @@ import {
   projects,
   users,
 } from "@/lib/db/schema";
+import { isAccountEvidenceType } from "@/lib/evidence/schemas";
 import { env } from "@/lib/env";
 import { proofTokenFromHash } from "@/lib/studio/proof-token";
 import { trustQrDataUrl } from "@/lib/trust/qr";
@@ -202,6 +203,7 @@ export async function getPublicProvenance(slug: string): Promise<{
       .select({
         deliverable: deliverables,
         sha256: evidenceItems.sha256,
+        evidenceType: evidenceItems.type,
       })
       .from(deliverables)
       .leftJoin(evidenceItems, eq(deliverables.evidenceItemId, evidenceItems.id))
@@ -210,7 +212,8 @@ export async function getPublicProvenance(slug: string): Promise<{
       .limit(1);
 
     const row = rows[0];
-    if (!row?.sha256) continue;
+    // Account-level Identity files must never surface on /t.
+    if (!row?.sha256 || (row.evidenceType && isAccountEvidenceType(row.evidenceType))) continue;
     workProofs.push({
       id: row.deliverable.id,
       clientLabel: softClient(project.clientName),

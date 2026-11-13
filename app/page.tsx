@@ -67,7 +67,7 @@ export default function HomePage() {
 
         <CraftMarquee reverse />
 
-        <section className="glass overflow-hidden rounded-[28px] px-5 py-8 md:rounded-[32px] md:px-14 md:py-14">
+        <section className="glass-panel overflow-hidden rounded-[28px] px-5 py-8 md:rounded-[32px] md:px-14 md:py-14">
           <p className="text-xs uppercase tracking-[0.28em] text-teal">In short</p>
           <h2 className="mt-3 max-w-2xl font-serif text-3xl italic leading-tight md:text-5xl">
             Your work is the brand. The money side should be easy to read too.

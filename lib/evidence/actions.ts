@@ -11,14 +11,20 @@ import { readEvidenceFile } from "@/lib/ai/reader";
 import { logAgentAction } from "@/lib/ai/log";
 import { LlmNotConfiguredError } from "@/lib/ai/client";
 import {
+  ACCOUNT_EVIDENCE_TYPES,
   addLinkSchema,
   evidenceTypeSchema,
+  isAccountEvidenceType,
   type EvidenceFormState,
 } from "@/lib/evidence/schemas";
-import { addFileEvidence, addLinkEvidence } from "@/lib/evidence/service";
+import {
+  addAccountFileEvidence,
+  addFileEvidence,
+  addLinkEvidence,
+} from "@/lib/evidence/service";
 
 /**
- * Upload a file into the vault. The AI never creates this row.
+ * Upload a project file into the vault. The AI never creates this row.
  */
 export async function uploadEvidenceAction(
   _prev: EvidenceFormState,
@@ -27,8 +33,12 @@ export async function uploadEvidenceAction(
   const userId = await requireUserId();
   const projectId = String(formData.get("projectId") ?? "");
   const typeParsed = evidenceTypeSchema.safeParse(formData.get("type"));
-  if (!typeParsed.success || typeParsed.data === "portfolio_link") {
-    return { error: "Choose a file type (not a portfolio link) for uploads." };
+  if (
+    !typeParsed.success ||
+    typeParsed.data === "portfolio_link" ||
+    isAccountEvidenceType(typeParsed.data)
+  ) {
+    return { error: "Choose a project file type (not Identity and funds) for this upload." };
   }
 
   const file = formData.get("file");
@@ -66,6 +76,58 @@ export async function uploadEvidenceAction(
     }
     revalidatePath("/vault");
     revalidatePath(`/projects/${projectId}`);
+    return { ok: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not store that file." };
+  }
+}
+
+/**
+ * Upload an optional account-level Identity and funds file (no project).
+ */
+export async function uploadAccountEvidenceAction(
+  _prev: EvidenceFormState,
+  formData: FormData,
+): Promise<EvidenceFormState> {
+  const userId = await requireUserId();
+  const typeRaw = String(formData.get("type") ?? "");
+  if (!(ACCOUNT_EVIDENCE_TYPES as readonly string[]).includes(typeRaw)) {
+    return { error: "Choose an Identity and funds document type." };
+  }
+  const type = typeRaw as (typeof ACCOUNT_EVIDENCE_TYPES)[number];
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a file to upload. Redact card and account numbers first." };
+  }
+
+  const holderName = String(formData.get("holderName") ?? "").trim() || undefined;
+  const issuer = String(formData.get("issuer") ?? "").trim() || undefined;
+  const docDateRaw = String(formData.get("docDate") ?? "").trim();
+  let docDate: Date | null = null;
+  if (docDateRaw) {
+    const parsed = new Date(`${docDateRaw}T00:00:00.000Z`);
+    if (Number.isNaN(parsed.getTime())) {
+      return { error: "Document date must be a valid calendar day." };
+    }
+    docDate = parsed;
+  }
+
+  try {
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const mime = file.type || "application/octet-stream";
+    const row = await addAccountFileEvidence(userId, type, {
+      name: file.name,
+      type: mime,
+      bytes,
+    }, { holderName, issuer, docDate });
+    await logAgentAction({
+      userId,
+      action: "evidence.account_upload",
+      input: { type, name: file.name },
+      output: { id: row.id, sha256: row.sha256 },
+    });
+    revalidatePath("/vault");
     return { ok: true };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not store that file." };

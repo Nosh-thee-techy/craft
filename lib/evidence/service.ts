@@ -1,22 +1,29 @@
 /**
- * Purpose: Create and list vault items for a project the user owns.
- * Inputs: user id, project id, file bytes or a portfolio URL.
+ * Purpose: Create and list vault items for a project or account-level Identity files.
+ * Inputs: user id, optional project id, file bytes or a portfolio URL.
  * Outputs: evidence rows plus a completeness score. The AI never inserts rows.
+ *
+ * Account-level rows (no projectId) are private: callers of public routes must
+ * use `publicEvidenceRows` / never select them for /t or /c.
  */
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { evidenceItems, projects } from "@/lib/db/schema";
 import { completenessFromTypes, type Completeness } from "@/lib/evidence/completeness";
 import { evidenceTimestamp, sha256Hex } from "@/lib/evidence/hash";
 import {
   ALLOWED_EVIDENCE_TYPES,
+  isAccountEvidenceType,
   MAX_EVIDENCE_BYTES,
+  type AccountEvidenceType,
   type EvidenceRow,
   type EvidenceType,
 } from "@/lib/evidence/schemas";
 import { putEvidenceObject, signEvidenceUrl } from "@/lib/evidence/storage";
 import { getProjectForUser } from "@/lib/projects/service";
+
+const ACCOUNT_LABEL = "Identity and funds";
 
 /**
  * Keep file names path-safe so they can sit in the storage key.
@@ -43,11 +50,16 @@ function toEvidenceRow(
     sha256: row.sha256,
     addedAt: row.addedAt.toISOString(),
     hasExtractedText: Boolean(row.extractedText),
+    holderName: row.holderName,
+    issuer: row.issuer,
+    docDate: row.docDate?.toISOString() ?? null,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
   };
 }
 
 /**
- * List evidence the user can see, newest first. Optional project filter.
+ * List project evidence the user can see, newest first.
+ * Does not include account-level Identity rows (use listAccountEvidence).
  */
 export async function listEvidence(
   userId: string,
@@ -57,7 +69,6 @@ export async function listEvidence(
     .select({
       item: evidenceItems,
       projectName: projects.clientName,
-      ownerId: projects.userId,
     })
     .from(evidenceItems)
     .innerJoin(projects, eq(evidenceItems.projectId, projects.id))
@@ -72,7 +83,22 @@ export async function listEvidence(
 }
 
 /**
- * Completeness for one owned project.
+ * List account-level Identity and funds uploads for this user.
+ */
+export async function listAccountEvidence(userId: string): Promise<EvidenceRow[]> {
+  const rows = await db
+    .select()
+    .from(evidenceItems)
+    .where(and(eq(evidenceItems.userId, userId), isNull(evidenceItems.projectId)))
+    .orderBy(desc(evidenceItems.addedAt));
+
+  return rows
+    .filter((row) => isAccountEvidenceType(row.type))
+    .map((row) => toEvidenceRow(row, ACCOUNT_LABEL));
+}
+
+/**
+ * Completeness for one owned project (project types only).
  */
 export async function projectCompleteness(
   userId: string,
@@ -90,7 +116,7 @@ export async function projectCompleteness(
 }
 
 /**
- * Store a file, hash it on the server, and insert an evidence row.
+ * Store a project file, hash it on the server, and insert an evidence row.
  */
 export async function addFileEvidence(
   userId: string,
@@ -98,16 +124,14 @@ export async function addFileEvidence(
   type: Exclude<EvidenceType, "portfolio_link">,
   file: { name: string; type: string; bytes: Buffer },
 ): Promise<EvidenceRow> {
+  if (isAccountEvidenceType(type)) {
+    throw new Error("Upload Identity and funds files in the account section, not on a project.");
+  }
   const project = await getProjectForUser(userId, projectId);
   if (!project) {
     throw new Error("Project not found.");
   }
-  if (file.bytes.byteLength === 0 || file.bytes.byteLength > MAX_EVIDENCE_BYTES) {
-    throw new Error("File must be between 1 byte and 12 MB.");
-  }
-  if (!ALLOWED_EVIDENCE_TYPES.includes(file.type as (typeof ALLOWED_EVIDENCE_TYPES)[number])) {
-    throw new Error("That file type is not allowed in the vault.");
-  }
+  assertFileOk(file);
 
   const id = crypto.randomUUID();
   const addedAt = evidenceTimestamp();
@@ -120,6 +144,7 @@ export async function addFileEvidence(
     .insert(evidenceItems)
     .values({
       id,
+      userId,
       projectId,
       type,
       storageKey: key,
@@ -133,6 +158,54 @@ export async function addFileEvidence(
     throw new Error("Failed to record evidence.");
   }
   return toEvidenceRow(created, project.clientName);
+}
+
+/**
+ * Store an account-level Identity and funds file (no project).
+ */
+export async function addAccountFileEvidence(
+  userId: string,
+  type: AccountEvidenceType,
+  file: { name: string; type: string; bytes: Buffer },
+  meta?: { holderName?: string; issuer?: string; docDate?: Date | null },
+): Promise<EvidenceRow> {
+  assertFileOk(file);
+
+  const id = crypto.randomUUID();
+  const addedAt = evidenceTimestamp();
+  const digest = sha256Hex(file.bytes);
+  const key = `${userId}/account/${id}/${safeFileName(file.name)}`;
+
+  await putEvidenceObject(key, file.bytes);
+
+  const docDate = meta?.docDate ?? null;
+  const expiresAt =
+    type === "address_proof" && docDate
+      ? new Date(docDate.getTime() + 90 * 24 * 60 * 60 * 1000)
+      : null;
+
+  const [created] = await db
+    .insert(evidenceItems)
+    .values({
+      id,
+      userId,
+      projectId: null,
+      type,
+      storageKey: key,
+      sha256: digest,
+      holderName: meta?.holderName?.trim() || null,
+      issuer: meta?.issuer?.trim() || null,
+      docDate,
+      expiresAt,
+      addedBy: userId,
+      addedAt,
+    })
+    .returning();
+
+  if (!created) {
+    throw new Error("Failed to record identity evidence.");
+  }
+  return toEvidenceRow(created, ACCOUNT_LABEL);
 }
 
 /**
@@ -154,6 +227,7 @@ export async function addLinkEvidence(
   const [created] = await db
     .insert(evidenceItems)
     .values({
+      userId,
       projectId,
       type: "portfolio_link",
       storageKey: url,
@@ -177,20 +251,25 @@ export async function downloadUrlFor(
   evidenceId: string,
 ): Promise<string | null> {
   const [row] = await db
-    .select({
-      item: evidenceItems,
-      ownerId: projects.userId,
-    })
+    .select()
     .from(evidenceItems)
-    .innerJoin(projects, eq(evidenceItems.projectId, projects.id))
     .where(eq(evidenceItems.id, evidenceId))
     .limit(1);
 
-  if (!row || row.ownerId !== userId || !row.item.storageKey) {
+  if (!row || row.userId !== userId || !row.storageKey) {
     return null;
   }
-  if (row.item.type === "portfolio_link") {
-    return row.item.storageKey;
+  if (row.type === "portfolio_link") {
+    return row.storageKey;
   }
-  return signEvidenceUrl(row.item.storageKey);
+  return signEvidenceUrl(row.storageKey);
+}
+
+function assertFileOk(file: { type: string; bytes: Buffer }) {
+  if (file.bytes.byteLength === 0 || file.bytes.byteLength > MAX_EVIDENCE_BYTES) {
+    throw new Error("File must be between 1 byte and 12 MB.");
+  }
+  if (!ALLOWED_EVIDENCE_TYPES.includes(file.type as (typeof ALLOWED_EVIDENCE_TYPES)[number])) {
+    throw new Error("That file type is not allowed in the vault.");
+  }
 }

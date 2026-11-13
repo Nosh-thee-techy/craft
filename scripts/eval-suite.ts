@@ -68,9 +68,7 @@ function runCase(item: EvalCase): CaseResult {
       const parsed = heuristicParse(item.notice);
       const types = parsed.requests.map((request) => request.documentType);
       const missing = item.expectTypes.filter((type) => !types.includes(type as never));
-      const extraOk = types.every(
-        (type) => item.expectTypes.includes(type) || type === "other",
-      );
+      const extraOk = types.every((type) => item.expectTypes.includes(type as never));
       const ok = parsed.tone === item.expectTone && missing.length === 0 && extraOk;
       return {
         id: item.id,

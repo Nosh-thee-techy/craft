@@ -20,8 +20,16 @@ export type OnboardingPlatform = z.infer<typeof onboardingPlatformSchema>;
 
 export const profileStepSchema = z.object({
   name: z.string().trim().min(2, "Tell us your name."),
+  legalName: z.string().trim().min(2, "Legal name as on your ID.").optional().or(z.literal("")),
   craft: z.string().trim().min(2, "What do you make?"),
   country: z.string().trim().length(2).default("KE"),
+  addressEstate: z.string().trim().optional().or(z.literal("")),
+  addressRoad: z.string().trim().optional().or(z.literal("")),
+  addressBuilding: z.string().trim().optional().or(z.literal("")),
+  addressLandmark: z.string().trim().optional().or(z.literal("")),
+  addressTown: z.string().trim().optional().or(z.literal("")),
+  addressCounty: z.string().trim().optional().or(z.literal("")),
+  plusCode: z.string().trim().optional().or(z.literal("")),
 });
 
 export const linkedAccountInputSchema = z.object({
@@ -77,8 +85,16 @@ export type LinkedAccountRow = {
 
 export type OnboardingSnapshot = {
   name: string | null;
+  legalName: string | null;
   craft: string | null;
   country: string;
+  addressEstate: string | null;
+  addressRoad: string | null;
+  addressBuilding: string | null;
+  addressLandmark: string | null;
+  addressTown: string | null;
+  addressCounty: string | null;
+  plusCode: string | null;
   paypalConnected: boolean;
   linkedAccounts: LinkedAccountRow[];
   draft: ProfileDraft | null;

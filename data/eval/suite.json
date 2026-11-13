@@ -2,10 +2,10 @@
   {
     "id": "notice-paypal-full",
     "kind": "notice_parse",
-    "description": "Full PayPal limitation notice maps to known request types including other for ID.",
+    "description": "Full PayPal limitation notice maps to known request types including id_document for ID.",
     "notice": "PayPal Limitation Notice. Account limited. Send invoice, proof of payment, contract, deliverable, email history, portfolio website, and a government ID within 7 days by 16 November 2026.",
     "expectTone": "restriction",
-    "expectTypes": ["invoice", "payment", "contract", "deliverable", "comms", "portfolio_link", "other"]
+    "expectTypes": ["invoice", "payment", "contract", "deliverable", "comms", "portfolio_link", "id_document"]
   },
   {
     "id": "notice-invoice-only",
@@ -53,7 +53,7 @@
     "description": "Restriction tone from on-hold language.",
     "notice": "Your funds are on hold. Please send supporting documents named in this restriction notice.",
     "expectTone": "restriction",
-    "expectTypes": ["other"]
+    "expectTypes": ["source_of_funds"]
   },
   {
     "id": "notice-deliverable-tracking",

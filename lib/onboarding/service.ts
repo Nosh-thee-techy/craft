@@ -54,8 +54,16 @@ export async function getOnboardingSnapshot(userId: string): Promise<OnboardingS
 
   return {
     name: user.name,
+    legalName: user.legalName,
     craft: user.craft,
     country: user.country,
+    addressEstate: user.addressEstate,
+    addressRoad: user.addressRoad,
+    addressBuilding: user.addressBuilding,
+    addressLandmark: user.addressLandmark,
+    addressTown: user.addressTown,
+    addressCounty: user.addressCounty,
+    plusCode: user.plusCode,
     paypalConnected: Boolean(user.paypalSandboxConnectedAt),
     linkedAccounts: links.map(toLinkedRow),
     draft,
@@ -74,18 +82,38 @@ export async function getOnboardingSnapshot(userId: string): Promise<OnboardingS
 }
 
 /**
- * Step 1 — who you are.
+ * Step 1 — who you are + canonical address (typed once, reused everywhere).
  */
 export async function saveProfileStep(
   userId: string,
-  input: { name: string; craft: string; country: string },
+  input: {
+    name: string;
+    craft: string;
+    country: string;
+    legalName?: string;
+    addressEstate?: string;
+    addressRoad?: string;
+    addressBuilding?: string;
+    addressLandmark?: string;
+    addressTown?: string;
+    addressCounty?: string;
+    plusCode?: string;
+  },
 ): Promise<void> {
   await db
     .update(users)
     .set({
       name: input.name,
+      legalName: emptyToNull(input.legalName) ?? input.name,
       craft: input.craft,
       country: input.country,
+      addressEstate: emptyToNull(input.addressEstate),
+      addressRoad: emptyToNull(input.addressRoad),
+      addressBuilding: emptyToNull(input.addressBuilding),
+      addressLandmark: emptyToNull(input.addressLandmark),
+      addressTown: emptyToNull(input.addressTown),
+      addressCounty: emptyToNull(input.addressCounty),
+      plusCode: emptyToNull(input.plusCode),
       updatedAt: new Date(),
     })
     .where(eq(users.id, userId));
@@ -95,6 +123,11 @@ export async function saveProfileStep(
     input,
     output: { ok: true },
   });
+}
+
+function emptyToNull(value: string | undefined): string | null {
+  const trimmed = (value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 /**

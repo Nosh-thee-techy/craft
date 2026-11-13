@@ -13,8 +13,8 @@ import { completeJson, embedTexts, LlmNotConfiguredError } from "@/lib/ai/client
 import { logAgentAction } from "@/lib/ai/log";
 import { db } from "@/lib/db/client";
 import { docChunks, evidenceItems, projects } from "@/lib/db/schema";
-import type { EvidenceType } from "@/lib/evidence/schemas";
-import { heuristicParse } from "@/lib/freeze/parse-heuristic";
+import { isAccountEvidenceType, type EvidenceType } from "@/lib/evidence/schemas";
+import { heuristicParse, parseDeadlineAt } from "@/lib/freeze/parse-heuristic";
 import {
   mappingSchema,
   parsedNoticeSchema,
@@ -30,7 +30,11 @@ import {
 export { heuristicParse } from "@/lib/freeze/parse-heuristic";
 
 /**
- * Parse a pasted PayPal notice into requests. Heuristics first; LLM may refine.
+ * Parse a pasted PayPal notice into requests.
+ *
+ * F4 (traced): LLM `completeJson` is the primary path when configured.
+ * `heuristicParse` always runs first as a seed and becomes the result if the
+ * LLM is missing, times out, or returns invalid JSON — never the other way around.
  */
 export async function parseLimitationNotice(
   userId: string,
@@ -42,7 +46,7 @@ export async function parseLimitationNotice(
   try {
     parsed = await completeJson({
       system:
-        "You extract what PayPal asked a seller to send. Use only the pasted notice. Map each request to one of: contract, invoice, payment, deliverable, comms, portfolio_link, other. other is for ID or anything CRAFT does not store. Never invent a request that is not in the notice. Never invent files.",
+        "You extract what PayPal asked a seller to send. Use only the pasted notice. Map each request to exactly one of: contract, invoice, payment, deliverable, comms, portfolio_link, id_document, address_proof, bank_statement, source_of_funds, employment_proof. Use id_document/address_proof/bank_statement/source_of_funds/employment_proof for Kenya-style KYC asks (utility bill, ID, bank statement, source of funds, employment). Never invent a request that is not in the notice. Never invent files. Also set deadlineAt to YYYY-MM-DD when the notice has a clear date, else null.",
       user: rawText.slice(0, 12_000),
       schema: parsedNoticeSchema,
     });
@@ -50,11 +54,25 @@ export async function parseLimitationNotice(
     parsed = heuristic;
   }
 
+  // Ensure deadlineAt is always filled when the free-text deadline is parseable.
+  if (!parsed.deadlineAt && parsed.deadline) {
+    const date = parseDeadlineAt(parsed.deadline);
+    parsed = {
+      ...parsed,
+      deadlineAt: date ? date.toISOString().slice(0, 10) : null,
+    };
+  }
+
   await logAgentAction({
     userId,
     action: "freeze.parse",
     input: { chars: rawText.length },
-    output: { requestCount: parsed.requests.length, tone: parsed.tone, deadline: parsed.deadline },
+    output: {
+      requestCount: parsed.requests.length,
+      tone: parsed.tone,
+      deadline: parsed.deadline,
+      deadlineAt: parsed.deadlineAt ?? null,
+    },
   });
 
   return parsedNoticeSchema.parse(parsed);
@@ -62,7 +80,7 @@ export async function parseLimitationNotice(
 
 type VaultSource = SourceText & {
   evidenceId: string;
-  projectId: string;
+  projectId: string | null;
 };
 
 /**
@@ -83,10 +101,9 @@ export async function mapNoticeToVault(
     } else {
       missing.push({
         request,
-        reason:
-          request.documentType === "other"
-            ? "CRAFT does not store identity documents. This stays missing."
-            : `No uploaded ${request.documentType.replace("_", " ")} matched this request.`,
+        reason: isAccountEvidenceType(request.documentType)
+          ? `No uploaded ${request.documentType.replaceAll("_", " ")} in the vault yet. PayPal reportedly asks for this — upload it under Identity and funds.`
+          : `No uploaded ${request.documentType.replaceAll("_", " ")} matched this request.`,
       });
     }
   }
@@ -197,7 +214,7 @@ export function canonicalLetter(parsed: ParsedNotice, mapping: EvidenceMapping):
 }
 
 /**
- * Load every vault row the user owns, with extracted text the verifier may read.
+ * Load every vault row the user owns (project + account-level), for mapping.
  */
 export async function loadVaultSources(userId: string): Promise<VaultSource[]> {
   const rows = await db
@@ -206,19 +223,29 @@ export async function loadVaultSources(userId: string): Promise<VaultSource[]> {
       projectName: projects.clientName,
     })
     .from(evidenceItems)
-    .innerJoin(projects, eq(evidenceItems.projectId, projects.id))
-    .where(eq(projects.userId, userId));
+    .leftJoin(projects, eq(evidenceItems.projectId, projects.id))
+    .where(eq(evidenceItems.userId, userId));
 
   return rows.map(({ item, projectName }) => {
     const fileName =
       item.type === "portfolio_link" ? item.storageKey : (item.storageKey?.split("/").pop() ?? null);
+    const scopeLabel = projectName ?? "Identity and funds";
     return {
       evidenceId: item.id,
       projectId: item.projectId,
       fileName,
       sha256: item.sha256,
       type: item.type,
-      text: [item.extractedText, projectName, fileName].filter(Boolean).join("\n"),
+      text: [
+        item.extractedText,
+        item.holderName,
+        item.issuer,
+        item.addressText,
+        scopeLabel,
+        fileName,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     };
   });
 }
@@ -248,7 +275,7 @@ async function matchesForRequest(
   };
 
   for (const source of sources) {
-    if (request.documentType !== "other" && source.type === request.documentType) {
+    if (source.type === request.documentType) {
       consider(source, source.text);
     }
   }

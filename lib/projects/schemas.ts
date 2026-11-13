@@ -35,9 +35,17 @@ export type ProjectFormState = {
   fieldErrors?: Record<string, string[] | undefined>;
 };
 
+export type InvoiceFlagView = {
+  code: string;
+  severity: string;
+  reason: string;
+};
+
 export type InvoiceActionState = {
   error?: string;
   ok?: boolean;
+  /** Pre-invoice flags — advice only; send still proceeds. */
+  flags?: InvoiceFlagView[];
 };
 
 /** Serializable project row for the AG Grid (safe to import from client components). */

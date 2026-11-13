@@ -214,6 +214,41 @@ body::before {
   -webkit-backdrop-filter: blur(28px);
 }
 
+/**
+ * Readable card surface over photos / busy backgrounds.
+ * Plain `.glass` is too see-through on the landing hero, so Rehema and map
+ * rooms use this denser panel instead.
+ */
+.glass-panel {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--background) 82%, transparent),
+    color-mix(in srgb, var(--background) 70%, transparent)
+  );
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-inset);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+}
+
+html.light .glass-panel {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 248, 236, 0.94),
+    rgba(255, 236, 214, 0.9)
+  );
+}
+
+.map-card-copy {
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+}
+
+html.light .map-card-copy {
+  background: rgba(255, 248, 236, 0.96);
+}
+
 .studio-floor {
   background: var(--floor);
   border: 1px solid var(--glass-border);

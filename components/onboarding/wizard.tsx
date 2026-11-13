@@ -18,6 +18,7 @@ import {
   saveVisibilityAction,
   verifyLinkAction,
 } from "@/lib/onboarding/actions";
+import { ADDRESS_PROOF_LADDER, ladderStatusLabel } from "@/lib/address";
 import type { OnboardingFormState, OnboardingSnapshot } from "@/lib/onboarding/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,9 +94,36 @@ export function OnboardingWizard({ snapshot, appUrl }: WizardProps) {
           description="This stays editable. Nothing sensitive is inferred later."
         >
           <form action={profileAction} className="space-y-4">
-            <Field label="Name" name="name" defaultValue={snapshot.name ?? ""} required />
+            <Field label="Studio name" name="name" defaultValue={snapshot.name ?? ""} required />
+            <Field
+              label="Legal name (as on ID)"
+              name="legalName"
+              defaultValue={snapshot.legalName ?? snapshot.name ?? ""}
+            />
             <Field label="Craft" name="craft" defaultValue={snapshot.craft ?? ""} required />
             <Field label="Country" name="country" defaultValue={snapshot.country || "KE"} />
+            <div className="rounded-2xl border border-border/70 bg-background/30 p-4 space-y-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-primary">Canonical address</p>
+              <p className="text-sm text-muted-foreground">
+                Type it once. Invoices and address checks reuse this — landmark addressing is fine.
+              </p>
+              <Field label="Estate" name="addressEstate" defaultValue={snapshot.addressEstate ?? ""} />
+              <Field label="Road" name="addressRoad" defaultValue={snapshot.addressRoad ?? ""} />
+              <Field
+                label="Building"
+                name="addressBuilding"
+                defaultValue={snapshot.addressBuilding ?? ""}
+              />
+              <Field
+                label="Landmark"
+                name="addressLandmark"
+                defaultValue={snapshot.addressLandmark ?? ""}
+              />
+              <Field label="Town" name="addressTown" defaultValue={snapshot.addressTown ?? ""} />
+              <Field label="County" name="addressCounty" defaultValue={snapshot.addressCounty ?? ""} />
+              <Field label="Plus code (optional)" name="plusCode" defaultValue={snapshot.plusCode ?? ""} />
+            </div>
+            <AddressLadderHints />
             <Footer
               pending={profilePending}
               error={profileState.error}
@@ -361,6 +389,33 @@ export function OnboardingWizard({ snapshot, appUrl }: WizardProps) {
           </form>
         </StepCard>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Proof ladder: rungs 1–2 reported; 3–5 fallback (not confirmed by PayPal).
+ */
+function AddressLadderHints() {
+  return (
+    <div className="rounded-2xl border border-dashed border-border/80 p-4 space-y-2">
+      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+        Address proof ladder
+      </p>
+      <ol className="space-y-2">
+        {ADDRESS_PROOF_LADDER.map((rung) => (
+          <li key={rung.id} className="text-sm">
+            <span className="font-mono text-primary">{rung.rank}.</span>{" "}
+            <span>{rung.title}</span>
+            <span className="ml-2 text-xs text-muted-foreground">
+              ({ladderStatusLabel(rung.status)})
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="text-xs text-muted-foreground">
+        Upload proofs later under Vault → Identity and funds. Match checks are code, not AI.
+      </p>
     </div>
   );
 }

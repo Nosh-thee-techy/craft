@@ -266,6 +266,7 @@ async function main(): Promise<void> {
       const [item] = await db
         .insert(schema.evidenceItems)
         .values({
+          userId: user.id,
           projectId: row.id,
           type: type as EvidenceType,
           storageKey,
