@@ -6,11 +6,17 @@
 import "server-only";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { logAgentAction } from "@/lib/ai/log";
+import { completeJson } from "@/lib/ai/client";
 import {
   draftPackLetter,
   mapNoticeToVault,
   parseLimitationNotice,
 } from "@/lib/ai/freezeShield";
+import {
+  packReviewPassesCitationGate,
+  reviewPackGaps,
+  type PackReviewGap,
+} from "@/lib/ai/pack-reviewer-core";
 import { verifyClaims } from "@/lib/ai/verifier";
 import { db } from "@/lib/db/client";
 import { evidenceItems, limitationNotices, responsePacks, users } from "@/lib/db/schema";
@@ -22,11 +28,13 @@ import { runPreflight, type PreflightFile } from "@/lib/freeze/preflight";
 import {
   mappingSchema,
   packDraftSchema,
+  packReviewGapSchema,
   parsedNoticeSchema,
   verifierReportSchema,
   type EvidenceMapping,
   type FreezeFormState,
   type PackDraft,
+  type PackReviewGapView,
   type ParsedNotice,
   type VerifierReport,
 } from "@/lib/freeze/schemas";
@@ -40,6 +48,8 @@ export type StoredPack = {
   mapping: EvidenceMapping;
   draft: PackDraft;
   report: VerifierReport;
+  reviewGaps: PackReviewGapView[];
+  reviewSource: "llm" | "deterministic";
   downloadUrl: string | null;
 };
 
@@ -48,6 +58,8 @@ type PackReportJson = {
   mapping: EvidenceMapping;
   draft: PackDraft;
   report: VerifierReport;
+  reviewGaps?: PackReviewGapView[];
+  reviewSource?: "llm" | "deterministic";
 };
 
 /**
@@ -73,6 +85,17 @@ export async function runFreezeShield(userId: string, rawText: string): Promise<
     .where(eq(limitationNotices.id, notice.id));
 
   const { mapping, sources } = await mapNoticeToVault(userId, parsed);
+
+  // F3: second-pass “PayPal reviewer” — gaps must cite missing requests.
+  const review = await reviewPackGaps(mapping, completeJson);
+  const reviewGaps = filterCitedGaps(review.gaps, mapping);
+  await logAgentAction({
+    userId,
+    action: "pack.review",
+    input: { noticeId: notice.id, missing: mapping.missing.length },
+    output: { source: review.source, gapCount: reviewGaps.length },
+  });
+
   const draft = await draftPackLetter(userId, parsed, mapping);
   const report = await verifyClaims({
     userId,
@@ -83,7 +106,14 @@ export async function runFreezeShield(userId: string, rawText: string): Promise<
     sources,
   });
 
-  const payload: PackReportJson = { parsed, mapping, draft, report };
+  const payload: PackReportJson = {
+    parsed,
+    mapping,
+    draft,
+    report,
+    reviewGaps,
+    reviewSource: review.source,
+  };
   const status = report.passed ? "verified" : "draft";
   const [pack] = await db
     .insert(responsePacks)
@@ -113,8 +143,23 @@ export async function runFreezeShield(userId: string, rawText: string): Promise<
     mapping,
     draft,
     report,
+    reviewGaps,
+    reviewSource: review.source,
     downloadUrl: null,
   };
+}
+
+/**
+ * Drop any reviewer gap that fails the citation gate (fail-closed).
+ */
+function filterCitedGaps(
+  gaps: PackReviewGap[],
+  mapping: EvidenceMapping,
+): PackReviewGapView[] {
+  const cited = gaps.filter((gap) =>
+    packReviewPassesCitationGate([gap], mapping),
+  );
+  return cited.map((gap) => packReviewGapSchema.parse(gap));
 }
 
 /**
@@ -338,6 +383,8 @@ export function toFormState(pack: StoredPack): FreezeFormState {
     mapping: pack.mapping,
     draft: pack.draft,
     report: pack.report,
+    reviewGaps: pack.reviewGaps,
+    reviewSource: pack.reviewSource,
     status: pack.status,
     downloadUrl: pack.downloadUrl ?? undefined,
   };
@@ -363,6 +410,16 @@ async function ownedPack(userId: string, packId: string) {
 }
 
 /**
+ * Rehydrate JSON stored on the pack row. Exported for F4 follow-up drafts.
+ */
+export function packFromRow(
+  pack: typeof responsePacks.$inferSelect,
+  noticeId: string,
+): StoredPack {
+  return hydratePack(pack, noticeId);
+}
+
+/**
  * Rehydrate JSON stored on the pack row.
  */
 function hydratePack(
@@ -373,6 +430,11 @@ function hydratePack(
   if (!payload) {
     throw new Error("This pack has no verifier payload.");
   }
+  const reviewGaps = (payload.reviewGaps ?? [])
+    .map((gap) => packReviewGapSchema.safeParse(gap))
+    .filter((result) => result.success)
+    .map((result) => result.data);
+
   return {
     noticeId,
     packId: pack.id,
@@ -381,6 +443,8 @@ function hydratePack(
     mapping: mappingSchema.parse(payload.mapping),
     draft: packDraftSchema.parse(payload.draft),
     report: verifierReportSchema.parse(payload.report),
+    reviewGaps,
+    reviewSource: payload.reviewSource ?? "deterministic",
     downloadUrl: pack.bundleKey
       ? signEvidenceUrl(pack.bundleKey)
       : pack.pdfKey

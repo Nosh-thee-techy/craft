@@ -6,7 +6,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { approvePackAction, exportPackAction } from "@/lib/freeze/actions";
+import {
+  approvePackAction,
+  exportPackAction,
+  followUpReplyAction,
+} from "@/lib/freeze/actions";
 import type { FreezeFormState } from "@/lib/freeze/schemas";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,15 +35,20 @@ export function FreezeResult({ state }: FreezeResultProps) {
     state,
   );
   const [exportState, exportAction, exportPending] = useActionState(exportPackAction, state);
+  const [followState, followAction, followPending] = useActionState(
+    followUpReplyAction,
+    state,
+  );
 
   const view =
+    (followState.ok && followState.packId ? followState : null) ??
     (exportState.ok && exportState.packId === state.packId ? exportState : null) ??
     (approveState.ok && approveState.packId === state.packId ? approveState : null) ??
     state;
 
   const canApprove = view.status === "verified";
   const canExport = view.status === "approved" || view.status === "exported";
-  const error = approveState.error ?? exportState.error;
+  const error = approveState.error ?? exportState.error ?? followState.error;
 
   return (
     <div className="space-y-4">
@@ -110,6 +119,36 @@ export function FreezeResult({ state }: FreezeResultProps) {
         </CardContent>
       </Card>
 
+      {view.reviewGaps && view.reviewGaps.length > 0 ? (
+        <Card data-testid="pack-review-gaps">
+          <CardHeader>
+            <p className="text-xs uppercase tracking-[0.22em] text-primary">Pack review</p>
+            <CardTitle>What a reviewer may still ask for</CardTitle>
+            <CardDescription>
+              Second pass over the mapped pack
+              {view.reviewSource ? ` · ${view.reviewSource}` : ""}. Every gap cites a
+              missing request — nothing invented.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              {view.reviewGaps.map((gap) => (
+                <li
+                  key={`${gap.citesRequestLabel}-${gap.label}`}
+                  className="rounded-2xl border border-border/70 p-3"
+                >
+                  <p className="font-medium">{gap.label}</p>
+                  <p className="mt-1 text-muted-foreground">{gap.reason}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Cites: {gap.citesRequestLabel}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader>
           <p className="text-xs uppercase tracking-[0.22em] text-primary">Letter</p>
@@ -153,6 +192,32 @@ export function FreezeResult({ state }: FreezeResultProps) {
           ) : null}
           {error ? <p className="w-full text-sm text-destructive">{error}</p> : null}
         </CardFooter>
+      </Card>
+
+      <Card data-testid="follow-up-reply">
+        <CardHeader>
+          <p className="text-xs uppercase tracking-[0.22em] text-primary">Follow-up</p>
+          <CardTitle>Reply assistant</CardTitle>
+          <CardDescription>
+            Paste a PayPal follow-up. CRAFT drafts from vault cites only, then runs the
+            same verifier and approve gate.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={followAction} className="space-y-3">
+            <input type="hidden" name="packId" value={view.packId ?? ""} />
+            <textarea
+              name="followUp"
+              rows={4}
+              placeholder="Paste the follow-up from PayPal…"
+              className="w-full rounded-2xl border border-border/70 bg-[var(--field)] p-3 text-sm"
+              required
+            />
+            <Button type="submit" variant="outline" disabled={!view.packId || followPending}>
+              {followPending ? "Drafting…" : "Draft follow-up reply"}
+            </Button>
+          </form>
+        </CardContent>
       </Card>
     </div>
   );

@@ -109,6 +109,15 @@ export const pasteNoticeSchema = z.object({
     .max(MAX_NOTICE_CHARS, "That notice is too long to parse."),
 });
 
+/** F3 pack-reviewer gap shown after mapping (must cite a missing request). */
+export const packReviewGapSchema = z.object({
+  label: z.string().min(1),
+  reason: z.string().min(1),
+  citesRequestLabel: z.string().min(1),
+});
+
+export type PackReviewGapView = z.infer<typeof packReviewGapSchema>;
+
 export type FreezeFormState = {
   error?: string;
   ok?: boolean;
@@ -118,6 +127,9 @@ export type FreezeFormState = {
   mapping?: EvidenceMapping;
   draft?: PackDraft;
   report?: VerifierReport;
+  /** F3 second-pass reviewer gaps (cite missing requests only). */
+  reviewGaps?: PackReviewGapView[];
+  reviewSource?: "llm" | "deterministic";
   status?: "draft" | "verified" | "approved" | "exported";
   downloadUrl?: string;
 };
