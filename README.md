@@ -61,7 +61,7 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Evidence Vault:** private upload, SHA-256, server timestamp, signed download, checklist score (in code), optional LLM reader/auditor
 - **Freeze Shield (Phase 3):** paste a PayPal limitation notice → map to vault → draft letter → fail-closed verifier → approve → PDF pack
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
-- **Onboarding (Phase 5):** multi-step setup with verified link ownership (GitHub / YouTube / RSS / export), AI profile draft, split rules, visibility
+- **Onboarding (Phase 5):** four-beat setup (You → Prove → Stage → Go) with verified link ownership (GitHub / YouTube / RSS / export), optional AI profile draft, split rules, visibility
 - **Money (Phase 6):** score, cash-flow band, planner + educational investing range, split proposals on payment (approve/reject), live `/money` UI
 - **Layer 1 (work security):** studio profile home, Work Proof Tokens (hash certificates), scan-to-verify QR on `/t/[slug]`, client verify card before billing
 - **Rehema (studio guide):** Kabla-style bottom-right helper that explains each room once per session, then collapses to “Ask Rehema”
@@ -163,15 +163,11 @@ Wording stays **verified link ownership** / **work provenance** — never verifi
 
 ## Onboarding + verified link ownership (Phase 5)
 
-Open `/onboarding` (new signups land here). Steps are skippable:
+Open `/onboarding` (new signups land here). Three short beats — each skippable:
 
-1. Profile (name, craft, country)
-2. PayPal sandbox marker (requires env keys; can skip)
-3. Add a public link → place the `CRAFT-…` challenge code → verify
-4. AI profile draft from verified links only — edit and approve
-5. Split rules (tax / savings / expenses must total 100%; computed in code)
-6. Trust-page visibility
-7. Finish
+1. **You** — studio name, craft, country (address optional / collapsed)
+2. **Prove** — add a public link → place the `CRAFT-…` challenge code → verify link ownership → optional AI draft from verified links only
+3. **Run** — PayPal sandbox marker, split rules (tax / savings / expenses = 100%, computed in code), trust-page visibility → open the studio
 
 Official sources only: GitHub API, YouTube Data API, RSS/oEmbed, plus an upload-export fallback. We say **verified link ownership**, never verified identity.
 

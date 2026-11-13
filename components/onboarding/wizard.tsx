@@ -1,7 +1,7 @@
 /**
- * Purpose: Multi-step onboarding wizard for Phase 5.
+ * Purpose: Short, punchy onboarding for Kenyan creatives (Phase 5).
  * Inputs: server snapshot; step actions.
- * Outputs: profile, PayPal, verified link ownership, draft, splits, visibility.
+ * Outputs: profile, verified link ownership, draft, PayPal, splits, visibility.
  */
 "use client";
 
@@ -18,30 +18,14 @@ import {
   saveVisibilityAction,
   verifyLinkAction,
 } from "@/lib/onboarding/actions";
-import { ADDRESS_PROOF_LADDER, ladderStatusLabel } from "@/lib/address";
 import type { OnboardingFormState, OnboardingSnapshot } from "@/lib/onboarding/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-const STEPS = [
-  "Profile",
-  "PayPal",
-  "Links",
-  "Draft",
-  "Money",
-  "Visibility",
-  "Done",
-] as const;
+/** Three beats instead of seven screens — same data, less ceremony. */
+const STEPS = ["You", "Prove", "Run"] as const;
 
 const initial: OnboardingFormState = {};
 
@@ -51,7 +35,7 @@ type WizardProps = {
 };
 
 /**
- * Skip-friendly steps. Verified link ownership is the honesty core of this flow.
+ * Skip-friendly three-step flow. Verified link ownership is the honesty core.
  */
 export function OnboardingWizard({ snapshot, appUrl }: WizardProps) {
   const [step, setStep] = useState(0);
@@ -65,384 +49,470 @@ export function OnboardingWizard({ snapshot, appUrl }: WizardProps) {
   const [visState, visAction, visPending] = useActionState(saveVisibilityAction, initial);
   const [doneState, doneAction, donePending] = useActionState(completeOnboardingAction, initial);
 
-  const activeLinkId = verifyState.linkedAccountId ?? linkState.linkedAccountId ?? snapshot.linkedAccounts[0]?.id;
+  const activeLinkId =
+    verifyState.linkedAccountId ?? linkState.linkedAccountId ?? snapshot.linkedAccounts[0]?.id;
   const challengeCode =
     linkState.challengeCode ??
     snapshot.linkedAccounts.find((row) => row.id === activeLinkId)?.challengeCode ??
     snapshot.linkedAccounts[0]?.challengeCode;
   const draft = approveState.draft ?? draftState.draft ?? snapshot.draft;
+  const linkVerified =
+    verifyState.verified || snapshot.linkedAccounts.some((row) => row.status === "verified");
+  const finished = doneState.ok || Boolean(snapshot.completedAt);
 
   return (
-    <div className="space-y-6">
-      <ol className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-        {STEPS.map((label, index) => (
-          <li
-            key={label}
-            className={`rounded-full px-3 py-1 ${
-              index === step ? "bg-primary/20 text-primary" : "bg-background/40"
-            }`}
+    <div className="space-y-8">
+      <Progress step={step} />
+
+      <div key={step} className="rise space-y-6">
+        {step === 0 ? (
+          <StepShell
+            kicker="Beat 1 · You"
+            title="Name the studio"
+            blurb="What clients shout across town. Editable later."
           >
-            {index + 1}. {label}
-          </li>
-        ))}
-      </ol>
-
-      {step === 0 ? (
-        <StepCard
-          kicker="Who you are"
-          title="Name your studio"
-          description="This stays editable. Nothing sensitive is inferred later."
-        >
-          <form action={profileAction} className="space-y-4">
-            <Field label="Studio name" name="name" defaultValue={snapshot.name ?? ""} required />
-            <Field
-              label="Legal name (as on ID)"
-              name="legalName"
-              defaultValue={snapshot.legalName ?? snapshot.name ?? ""}
-            />
-            <Field label="Craft" name="craft" defaultValue={snapshot.craft ?? ""} required />
-            <Field label="Country" name="country" defaultValue={snapshot.country || "KE"} />
-            <div className="rounded-2xl border border-border/70 bg-background/30 p-4 space-y-3">
-              <p className="text-xs uppercase tracking-[0.18em] text-primary">Canonical address</p>
-              <p className="text-sm text-muted-foreground">
-                Type it once. Invoices and address checks reuse this — landmark addressing is fine.
-              </p>
-              <Field label="Estate" name="addressEstate" defaultValue={snapshot.addressEstate ?? ""} />
-              <Field label="Road" name="addressRoad" defaultValue={snapshot.addressRoad ?? ""} />
+            <form action={profileAction} className="space-y-4">
               <Field
-                label="Building"
-                name="addressBuilding"
-                defaultValue={snapshot.addressBuilding ?? ""}
+                label="Studio name"
+                name="name"
+                defaultValue={snapshot.name ?? ""}
+                placeholder="Amina Studio"
+                required
               />
               <Field
-                label="Landmark"
-                name="addressLandmark"
-                defaultValue={snapshot.addressLandmark ?? ""}
+                label="Craft"
+                name="craft"
+                defaultValue={snapshot.craft ?? ""}
+                placeholder="Illustration · video · code…"
+                required
               />
-              <Field label="Town" name="addressTown" defaultValue={snapshot.addressTown ?? ""} />
-              <Field label="County" name="addressCounty" defaultValue={snapshot.addressCounty ?? ""} />
-              <Field label="Plus code (optional)" name="plusCode" defaultValue={snapshot.plusCode ?? ""} />
-            </div>
-            <AddressLadderHints />
-            <Footer
-              pending={profilePending}
-              error={profileState.error}
-              onSkip={() => setStep(1)}
-              onNext={() => setStep(1)}
-              showNext={profileState.ok}
-            />
-          </form>
-        </StepCard>
-      ) : null}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Country" name="country" defaultValue={snapshot.country || "KE"} />
+                <Field
+                  label="Legal name (optional)"
+                  name="legalName"
+                  defaultValue={snapshot.legalName ?? ""}
+                  placeholder="As on ID"
+                />
+              </div>
 
-      {step === 1 ? (
-        <StepCard
-          kicker="PayPal sandbox"
-          title="Connect sandbox keys"
-          description="CRAFT is sandbox-only. Keys stay in env — we only mark that they are present."
-        >
-          <form action={paypalAction} className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {snapshot.paypalConnected
-                ? "Sandbox connection already marked on this studio."
-                : "When PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET are set, press connect."}
-            </p>
-            <Footer
-              pending={paypalPending}
-              error={paypalState.error}
-              submitLabel={snapshot.paypalConnected ? "Connected" : "Mark sandbox connected"}
-              submitDisabled={snapshot.paypalConnected}
-              onSkip={() => setStep(2)}
-              onNext={() => setStep(2)}
-              showNext={paypalState.ok || snapshot.paypalConnected}
-            />
-          </form>
-        </StepCard>
-      ) : null}
-
-      {step === 2 ? (
-        <StepCard
-          kicker="Verified link ownership"
-          title="Prove a public link is yours"
-          description="Place the challenge code in a GitHub bio/README, YouTube description, or RSS/oEmbed feed. Or upload export text."
-        >
-          <form action={linkAction} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="platform">Platform</Label>
-              <select
-                id="platform"
-                name="platform"
-                className="flex h-12 w-full rounded-2xl border border-border bg-[var(--field)] px-4 text-sm"
-                defaultValue="github"
-              >
-                <option value="github">GitHub</option>
-                <option value="youtube">YouTube</option>
-                <option value="rss">RSS / oEmbed</option>
-                <option value="export">Upload export fallback</option>
-              </select>
-            </div>
-            <Field label="Handle or feed URL" name="handle" placeholder="nairobi-maker" required />
-            <Field label="Explicit URL (optional)" name="url" placeholder="https://…" />
-            <Button type="submit" disabled={linkPending}>
-              {linkPending ? "Saving…" : "Get challenge code"}
-            </Button>
-            {linkState.error ? <p className="text-sm text-destructive">{linkState.error}</p> : null}
-          </form>
-
-          {challengeCode ? (
-            <div className="mt-6 space-y-4 rounded-2xl border border-primary/30 bg-primary/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-primary">Challenge code</p>
-              <p className="font-mono text-lg">{challengeCode}</p>
-              <form action={verifyAction} className="space-y-3">
-                <input type="hidden" name="linkedAccountId" value={activeLinkId ?? ""} />
-                <div className="space-y-2">
-                  <Label htmlFor="exportText">Export / screenshot text (for export fallback)</Label>
-                  <Textarea id="exportText" name="exportText" className="min-h-24" />
+              <details className="group rounded-2xl border border-border/70 bg-background/25 open:bg-background/40">
+                <summary className="cursor-pointer list-none px-4 py-3 text-sm text-muted-foreground transition-colors group-open:text-foreground [&::-webkit-details-marker]:hidden">
+                  Address for invoices{" "}
+                  <span className="text-xs text-muted-foreground">(landmark OK · skip fine)</span>
+                </summary>
+                <div className="space-y-3 border-t border-border/60 px-4 pb-4 pt-3">
+                  <Field
+                    label="Estate"
+                    name="addressEstate"
+                    defaultValue={snapshot.addressEstate ?? ""}
+                  />
+                  <Field label="Road" name="addressRoad" defaultValue={snapshot.addressRoad ?? ""} />
+                  <Field
+                    label="Building"
+                    name="addressBuilding"
+                    defaultValue={snapshot.addressBuilding ?? ""}
+                  />
+                  <Field
+                    label="Landmark"
+                    name="addressLandmark"
+                    defaultValue={snapshot.addressLandmark ?? ""}
+                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field
+                      label="Town"
+                      name="addressTown"
+                      defaultValue={snapshot.addressTown ?? ""}
+                    />
+                    <Field
+                      label="County"
+                      name="addressCounty"
+                      defaultValue={snapshot.addressCounty ?? ""}
+                    />
+                  </div>
+                  <Field
+                    label="Plus code"
+                    name="plusCode"
+                    defaultValue={snapshot.plusCode ?? ""}
+                    placeholder="Optional"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Proofs later under Vault → Identity and funds. Match checks are code, not AI.
+                  </p>
                 </div>
-                <Button type="submit" disabled={verifyPending}>
-                  {verifyPending ? "Checking…" : "Check verified link ownership"}
-                </Button>
-                {verifyState.error ? <p className="text-sm text-destructive">{verifyState.error}</p> : null}
-                {verifyState.verified ? (
-                  <p className="text-sm text-teal">Verified link ownership passed.</p>
-                ) : null}
-              </form>
-            </div>
-          ) : null}
+              </details>
 
-          <ul className="mt-4 space-y-2 text-sm">
-            {snapshot.linkedAccounts.map((row) => (
-              <li key={row.id} className="rounded-2xl border border-border px-4 py-3">
-                {row.platform} · {row.handle} · {row.status}
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button type="button" variant="outline" onClick={() => setStep(1)}>
-              Back
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setStep(3)}>
-              Skip for now
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setStep(3)}
-              disabled={!(verifyState.verified || snapshot.linkedAccounts.some((row) => row.status === "verified"))}
-            >
-              Next
-            </Button>
-          </div>
-        </StepCard>
-      ) : null}
-
-      {step === 3 ? (
-        <StepCard
-          kicker="AI profile draft"
-          title="Draft from verified links"
-          description="Edit freely. Nothing sensitive should be inferred. You must approve before it sticks."
-        >
-          <form action={draftAction} className="mb-4">
-            <Button type="submit" variant="outline" disabled={draftPending}>
-              {draftPending ? "Drafting…" : "Draft from verified link ownership"}
-            </Button>
-            {draftState.error ? <p className="mt-2 text-sm text-destructive">{draftState.error}</p> : null}
-          </form>
-          {draft ? (
-            <form action={approveAction} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="summary">Summary</Label>
-                <Textarea id="summary" name="summary" defaultValue={draft.summary} className="min-h-28" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="services">Services (one per line)</Label>
-                <Textarea id="services" name="services" defaultValue={draft.services.join("\n")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeline">Timeline (one per line)</Label>
-                <Textarea id="timeline" name="timeline" defaultValue={draft.timeline.join("\n")} />
-              </div>
-              <Footer
-                pending={approvePending}
-                error={approveState.error}
-                submitLabel="Approve draft"
-                onSkip={() => setStep(4)}
-                onNext={() => setStep(4)}
-                showNext={approveState.ok || snapshot.draftApproved}
+              <NavRow
+                pending={profilePending}
+                error={profileState.error}
+                submitLabel="Lock it in"
+                onSkip={() => setStep(1)}
+                onNext={() => setStep(1)}
+                showNext={profileState.ok || Boolean(snapshot.name)}
               />
             </form>
-          ) : (
-            <Footer pending={false} onSkip={() => setStep(4)} onNext={() => setStep(4)} showNext />
-          )}
-        </StepCard>
-      ) : null}
+          </StepShell>
+        ) : null}
 
-      {step === 4 ? (
-        <StepCard
-          kicker="Money setup"
-          title="Split rules"
-          description="Percentages are saved in code. The AI never calculates them."
-        >
-          <form action={splitAction} className="space-y-4">
-            <Field
-              label="Tax %"
-              name="taxPct"
-              type="number"
-              defaultValue={snapshot.splitRules?.taxPct ?? "30"}
-              required
-            />
-            <Field
-              label="Savings %"
-              name="savingsPct"
-              type="number"
-              defaultValue={snapshot.splitRules?.savingsPct ?? "20"}
-              required
-            />
-            <Field
-              label="Expenses %"
-              name="expensesPct"
-              type="number"
-              defaultValue={snapshot.splitRules?.expensesPct ?? "50"}
-              required
-            />
-            <Footer
-              pending={splitPending}
-              error={splitState.error}
-              onSkip={() => setStep(5)}
-              onNext={() => setStep(5)}
-              showNext={splitState.ok || Boolean(snapshot.splitRules)}
-            />
-          </form>
-        </StepCard>
-      ) : null}
-
-      {step === 5 ? (
-        <StepCard
-          kicker="Visibility"
-          title="What the trust page may show"
-          description="Same controls as Settings. Hidden means hidden."
-        >
-          <form action={visAction} className="space-y-4">
-            <Field
-              label="Public slug seed"
-              name="slugSeed"
-              defaultValue={snapshot.publicSlug ?? ""}
-              disabled={Boolean(snapshot.publicSlug)}
-            />
-            <label className="flex items-center gap-3 text-sm">
-              <input type="checkbox" name="showCounts" defaultChecked={snapshot.visibility.showCounts} />
-              Show counts
-            </label>
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                name="showPortfolio"
-                defaultChecked={snapshot.visibility.showPortfolio}
+        {step === 1 ? (
+          <StepShell
+            kicker="Beat 2 · Prove"
+            title="Own a public link"
+            blurb="Verified link ownership — never identity. Drop the code on GitHub, YouTube, or a feed."
+          >
+            <form action={linkAction} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="platform">Where</Label>
+                <select
+                  id="platform"
+                  name="platform"
+                  className="flex h-12 w-full rounded-2xl border border-border bg-[var(--field)] px-4 text-sm"
+                  defaultValue="github"
+                >
+                  <option value="github">GitHub</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="rss">RSS / oEmbed</option>
+                  <option value="export">Upload export fallback</option>
+                </select>
+              </div>
+              <Field
+                label="Handle or feed URL"
+                name="handle"
+                placeholder="nairobi-maker"
+                required
               />
-              Show portfolio
-            </label>
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                name="showCheckout"
-                defaultChecked={snapshot.visibility.showCheckout}
-              />
-              Show quote button
-            </label>
-            {visState.publicSlug || snapshot.publicSlug ? (
-              <p className="text-xs text-muted-foreground">
-                Public page: {appUrl}/t/{visState.publicSlug ?? snapshot.publicSlug}
-              </p>
-            ) : null}
-            <Footer
-              pending={visPending}
-              error={visState.error}
-              onSkip={() => setStep(6)}
-              onNext={() => setStep(6)}
-              showNext={visState.ok || Boolean(snapshot.publicSlug)}
-            />
-          </form>
-        </StepCard>
-      ) : null}
-
-      {step === 6 ? (
-        <StepCard
-          kicker="Done"
-          title="Studio is ready"
-          description="You can reopen onboarding anytime from the rail."
-        >
-          <form action={doneAction} className="space-y-4">
-            <Footer
-              pending={donePending}
-              error={doneState.error}
-              submitLabel="Finish onboarding"
-              onSkip={() => undefined}
-              hideSkip
-              onNext={() => undefined}
-              showNext={false}
-            />
-            {doneState.ok || snapshot.completedAt ? (
-              <Button asChild>
-                <Link href="/dashboard">Open the studio</Link>
+              <Field label="Full URL (optional)" name="url" placeholder="https://…" />
+              <Button type="submit" disabled={linkPending}>
+                {linkPending ? "Minting…" : "Get challenge code"}
               </Button>
+              {linkState.error ? (
+                <p className="text-sm text-destructive">{linkState.error}</p>
+              ) : null}
+            </form>
+
+            {challengeCode ? (
+              <div className="space-y-4 rounded-2xl border border-primary/35 bg-primary/10 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-primary">Paste this</p>
+                <p className="break-all font-mono text-lg tracking-tight">{challengeCode}</p>
+                <form action={verifyAction} className="space-y-3">
+                  <input type="hidden" name="linkedAccountId" value={activeLinkId ?? ""} />
+                  <div className="space-y-2">
+                    <Label htmlFor="exportText">Export text (fallback only)</Label>
+                    <Textarea id="exportText" name="exportText" className="min-h-20" />
+                  </div>
+                  <Button type="submit" disabled={verifyPending}>
+                    {verifyPending ? "Checking…" : "Check ownership"}
+                  </Button>
+                  {verifyState.error ? (
+                    <p className="text-sm text-destructive">{verifyState.error}</p>
+                  ) : null}
+                  {verifyState.verified ? (
+                    <p className="text-sm text-teal">Verified link ownership — locked.</p>
+                  ) : null}
+                </form>
+              </div>
             ) : null}
-          </form>
-        </StepCard>
-      ) : null}
+
+            {snapshot.linkedAccounts.length > 0 ? (
+              <ul className="space-y-2 text-sm">
+                {snapshot.linkedAccounts.map((row) => (
+                  <li
+                    key={row.id}
+                    className="rounded-2xl border border-border/80 px-4 py-2.5 text-muted-foreground"
+                  >
+                    <span className="text-foreground">{row.platform}</span> · {row.handle} ·{" "}
+                    {row.status}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {linkVerified ? (
+              <div className="space-y-4 rounded-2xl border border-border/70 bg-background/30 p-4">
+                <p className="text-sm font-medium">Draft the bio from that link</p>
+                <form action={draftAction}>
+                  <Button type="submit" variant="outline" disabled={draftPending}>
+                    {draftPending ? "Drafting…" : "Draft from verified links"}
+                  </Button>
+                  {draftState.error ? (
+                    <p className="mt-2 text-sm text-destructive">{draftState.error}</p>
+                  ) : null}
+                </form>
+                {draft ? (
+                  <form action={approveAction} className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="summary">Summary</Label>
+                      <Textarea
+                        id="summary"
+                        name="summary"
+                        defaultValue={draft.summary}
+                        className="min-h-24"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="services">Services (one per line)</Label>
+                      <Textarea
+                        id="services"
+                        name="services"
+                        defaultValue={draft.services.join("\n")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="timeline">Timeline (one per line)</Label>
+                      <Textarea
+                        id="timeline"
+                        name="timeline"
+                        defaultValue={draft.timeline.join("\n")}
+                      />
+                    </div>
+                    <Button type="submit" disabled={approvePending}>
+                      {approvePending ? "Saving…" : "Approve draft"}
+                    </Button>
+                    {approveState.error ? (
+                      <p className="text-sm text-destructive">{approveState.error}</p>
+                    ) : null}
+                  </form>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" variant="outline" onClick={() => setStep(0)}>
+                Back
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setStep(2)}>
+                Skip for now
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setStep(2)}
+                disabled={!(linkVerified || approveState.ok || snapshot.draftApproved)}
+              >
+                Next · money
+              </Button>
+            </div>
+          </StepShell>
+        ) : null}
+
+        {step === 2 ? (
+          <StepShell
+            kicker="Beat 3 · Run"
+            title="Money + trust page"
+            blurb="Splits in code (AI never maths them). Sandbox PayPal only."
+          >
+            <form action={paypalAction} className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-muted-foreground">
+                {snapshot.paypalConnected || paypalState.ok
+                  ? "Sandbox marked connected."
+                  : "Env keys ready? Mark sandbox."}
+              </p>
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={paypalPending || snapshot.paypalConnected || paypalState.ok}
+              >
+                {paypalPending
+                  ? "…"
+                  : snapshot.paypalConnected || paypalState.ok
+                    ? "Connected"
+                    : "Connect sandbox"}
+              </Button>
+              {paypalState.error ? (
+                <p className="w-full text-sm text-destructive">{paypalState.error}</p>
+              ) : null}
+            </form>
+
+            <form action={splitAction} className="space-y-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Split rules · must hit 100%
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <Field
+                  label="Tax %"
+                  name="taxPct"
+                  type="number"
+                  defaultValue={snapshot.splitRules?.taxPct ?? "30"}
+                  required
+                />
+                <Field
+                  label="Save %"
+                  name="savingsPct"
+                  type="number"
+                  defaultValue={snapshot.splitRules?.savingsPct ?? "20"}
+                  required
+                />
+                <Field
+                  label="Spend %"
+                  name="expensesPct"
+                  type="number"
+                  defaultValue={snapshot.splitRules?.expensesPct ?? "50"}
+                  required
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" variant="outline" disabled={splitPending}>
+                  {splitPending ? "Saving…" : "Save splits"}
+                </Button>
+                {splitState.ok || snapshot.splitRules ? (
+                  <span className="text-xs text-teal">Splits locked</span>
+                ) : null}
+                {splitState.error ? (
+                  <p className="w-full text-sm text-destructive">{splitState.error}</p>
+                ) : null}
+              </div>
+            </form>
+
+            <form action={visAction} className="space-y-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Trust page
+              </p>
+              <Field
+                label="Public slug"
+                name="slugSeed"
+                defaultValue={snapshot.publicSlug ?? ""}
+                placeholder="amina-studio"
+                disabled={Boolean(snapshot.publicSlug)}
+              />
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="showCounts"
+                    defaultChecked={snapshot.visibility.showCounts}
+                  />
+                  Counts
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="showPortfolio"
+                    defaultChecked={snapshot.visibility.showPortfolio}
+                  />
+                  Portfolio
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="showCheckout"
+                    defaultChecked={snapshot.visibility.showCheckout}
+                  />
+                  Quote button
+                </label>
+              </div>
+              {visState.publicSlug || snapshot.publicSlug ? (
+                <p className="text-xs text-muted-foreground">
+                  Live at {appUrl}/t/{visState.publicSlug ?? snapshot.publicSlug}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" variant="outline" disabled={visPending}>
+                  {visPending ? "Saving…" : "Save visibility"}
+                </Button>
+                {visState.error ? (
+                  <p className="w-full text-sm text-destructive">{visState.error}</p>
+                ) : null}
+              </div>
+            </form>
+
+            <div className="flex flex-wrap gap-3 border-t border-border/60 pt-4">
+              <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                Back
+              </Button>
+              {!finished ? (
+                <form action={doneAction}>
+                  <Button type="submit" disabled={donePending}>
+                    {donePending ? "Opening…" : "Open the studio"}
+                  </Button>
+                </form>
+              ) : (
+                <Button asChild>
+                  <Link href="/dashboard">Open the studio</Link>
+                </Button>
+              )}
+              {doneState.error ? (
+                <p className="w-full text-sm text-destructive">{doneState.error}</p>
+              ) : null}
+            </div>
+          </StepShell>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 /**
- * Proof ladder: rungs 1–2 reported; 3–5 fallback (not confirmed by PayPal).
+ * Compact three-beat progress — highlights the active beat only.
  */
-function AddressLadderHints() {
+function Progress({ step }: { step: number }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border/80 p-4 space-y-2">
-      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-        Address proof ladder
-      </p>
-      <ol className="space-y-2">
-        {ADDRESS_PROOF_LADDER.map((rung) => (
-          <li key={rung.id} className="text-sm">
-            <span className="font-mono text-primary">{rung.rank}.</span>{" "}
-            <span>{rung.title}</span>
-            <span className="ml-2 text-xs text-muted-foreground">
-              ({ladderStatusLabel(rung.status)})
+    <ol className="flex items-center gap-2">
+      {STEPS.map((label, index) => {
+        const active = index === step;
+        const done = index < step;
+        return (
+          <li key={label} className="flex min-w-0 flex-1 items-center gap-2">
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors duration-300 ${
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : done
+                    ? "bg-primary/25 text-primary"
+                    : "bg-background/50 text-muted-foreground"
+              }`}
+            >
+              {index + 1}
             </span>
+            <span
+              className={`truncate text-xs uppercase tracking-[0.16em] ${
+                active ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {label}
+            </span>
+            {index < STEPS.length - 1 ? (
+              <span
+                className={`mx-1 hidden h-px flex-1 sm:block ${
+                  done ? "bg-primary/40" : "bg-border"
+                }`}
+                aria-hidden
+              />
+            ) : null}
           </li>
-        ))}
-      </ol>
-      <p className="text-xs text-muted-foreground">
-        Upload proofs later under Vault → Identity and funds. Match checks are code, not AI.
-      </p>
-    </div>
+        );
+      })}
+    </ol>
   );
 }
 
-function StepCard({
+/**
+ * Step frame without heavy card chrome — glass plane + short copy.
+ */
+function StepShell({
   kicker,
   title,
-  description,
+  blurb,
   children,
 }: {
   kicker: string;
   title: string;
-  description: string;
+  blurb: string;
   children: ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader>
+    <section className="glass space-y-5 rounded-[28px] p-5 md:p-7">
+      <header className="space-y-1.5">
         <p className="text-xs uppercase tracking-[0.22em] text-primary">{kicker}</p>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+        <h2 className="font-display text-3xl tracking-tight md:text-4xl">{title}</h2>
+        <p className="max-w-xl text-sm text-muted-foreground">{blurb}</p>
+      </header>
+      <div className="space-y-5">{children}</div>
+    </section>
   );
 }
 
+/**
+ * Labeled input for onboarding forms.
+ */
 function Field(props: {
   label: string;
   name: string;
@@ -468,24 +538,23 @@ function Field(props: {
   );
 }
 
-function Footer(props: {
+/**
+ * Skip / save / next controls shared by early beats.
+ */
+function NavRow(props: {
   pending: boolean;
   error?: string;
   submitLabel?: string;
-  submitDisabled?: boolean;
   onSkip: () => void;
   onNext: () => void;
   showNext?: boolean;
-  hideSkip?: boolean;
 }) {
   return (
-    <CardFooter className="flex flex-wrap gap-3 px-0 pt-4">
-      {!props.hideSkip ? (
-        <Button type="button" variant="outline" onClick={props.onSkip}>
-          Skip
-        </Button>
-      ) : null}
-      <Button type="submit" disabled={props.pending || props.submitDisabled}>
+    <div className="flex flex-wrap gap-3 pt-1">
+      <Button type="button" variant="outline" onClick={props.onSkip}>
+        Skip
+      </Button>
+      <Button type="submit" disabled={props.pending}>
         {props.pending ? "Saving…" : props.submitLabel ?? "Save"}
       </Button>
       {props.showNext ? (
@@ -494,6 +563,6 @@ function Footer(props: {
         </Button>
       ) : null}
       {props.error ? <p className="w-full text-sm text-destructive">{props.error}</p> : null}
-    </CardFooter>
+    </div>
   );
 }
