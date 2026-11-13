@@ -3,6 +3,7 @@
  * Inputs: signed-in user; optional `project` query.
  * Outputs: project vault plus private Identity and funds section.
  */
+import { listUnconfirmedExtractions } from "@/lib/ai/doc-reader";
 import { requireUserId } from "@/lib/auth/session";
 import { completenessFromTypes } from "@/lib/evidence/completeness";
 import {
@@ -13,6 +14,7 @@ import {
 import { listProjects } from "@/lib/projects/service";
 import { PageHeader } from "@/components/brand/page-header";
 import { AuditorPanel } from "@/components/vault/auditor-panel";
+import { ConfirmExtractionPanel } from "@/components/vault/confirm-extraction";
 import { EvidenceChecklist } from "@/components/vault/checklist";
 import { EvidenceGrid } from "@/components/vault/evidence-grid";
 import { IdentityFundsSection } from "@/components/vault/identity-funds";
@@ -35,6 +37,7 @@ export default async function VaultPage({ searchParams }: VaultPageProps) {
 
   const rows = selected ? await listEvidence(userId, selected.id) : [];
   const accountRows = await listAccountEvidence(userId);
+  const unconfirmed = await listUnconfirmedExtractions(userId);
   const completeness = selected
     ? ((await projectCompleteness(userId, selected.id)) ?? completenessFromTypes([]))
     : completenessFromTypes([]);
@@ -46,6 +49,7 @@ export default async function VaultPage({ searchParams }: VaultPageProps) {
         title="Evidence Vault"
         lede="Save files here. Each one gets a hash and a time. The AI can only read what you upload."
       />
+      <ConfirmExtractionPanel rows={unconfirmed} />
       <IdentityFundsSection rows={accountRows} />
       <ProjectSwitcher projects={projects} selectedId={selected?.id ?? ""} />
       <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">

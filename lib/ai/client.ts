@@ -22,7 +22,16 @@ type CompleteJsonInput<T> = {
   user: string;
   schema: z.ZodType<T>;
   images?: { mimeType: string; base64: string }[];
+  /** Abort after this many ms (Phase 2 F1 doc-reader default 20s). */
+  timeoutMs?: number;
 };
+
+export class LlmTimeoutError extends Error {
+  constructor(timeoutMs: number) {
+    super(`LLM request timed out after ${timeoutMs}ms.`);
+    this.name = "LlmTimeoutError";
+  }
+}
 
 type ChatContent =
   | { type: "text"; text: string }
@@ -48,25 +57,43 @@ export async function completeJson<T>(input: CompleteJsonInput<T>): Promise<T> {
     });
   }
 
-  const response = await fetch(`${base}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: `${input.system}\nReply with a JSON object only. Do not invent files, hashes, money, or events.`,
-        },
-        { role: "user", content: userContent },
-      ],
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutMs = input.timeoutMs;
+  const timer =
+    timeoutMs && timeoutMs > 0
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
+
+  let response: Response;
+  try {
+    response = await fetch(`${base}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `${input.system}\nReply with a JSON object only. Do not invent files, hashes, money, or events.`,
+          },
+          { role: "user", content: userContent },
+        ],
+      }),
+    });
+  } catch (error) {
+    if (controller.signal.aborted && timeoutMs) {
+      throw new LlmTimeoutError(timeoutMs);
+    }
+    throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 
   if (!response.ok) {
     const detail = await response.text();
@@ -75,7 +102,12 @@ export async function completeJson<T>(input: CompleteJsonInput<T>): Promise<T> {
 
   const body: unknown = await response.json();
   const content = extractContent(body);
-  const parsedJson: unknown = JSON.parse(content);
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(content);
+  } catch {
+    throw new Error("LLM returned invalid JSON.");
+  }
   return input.schema.parse(parsedJson);
 }
 

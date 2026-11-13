@@ -7,9 +7,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/auth/session";
-import { readEvidenceFile } from "@/lib/ai/reader";
+import { extractDocument } from "@/lib/ai/doc-reader";
 import { logAgentAction } from "@/lib/ai/log";
-import { LlmNotConfiguredError } from "@/lib/ai/client";
 import {
   ACCOUNT_EVIDENCE_TYPES,
   addLinkSchema,
@@ -60,19 +59,16 @@ export async function uploadEvidenceAction(
       input: { projectId, type: typeParsed.data, name: file.name },
       output: { id: row.id, sha256: row.sha256 },
     });
-    try {
-      await readEvidenceFile(userId, row.id, bytes, mime);
-    } catch (error) {
-      if (!(error instanceof LlmNotConfiguredError)) {
-        // Hash already stored. Reader failure must not roll back the evidence.
-        await logAgentAction({
-          userId,
-          action: "evidence.reader",
-          input: { evidenceId: row.id },
-          output: { error: error instanceof Error ? error.message : "reader failed" },
-          verifierPassed: false,
-        });
-      }
+    // F1 doc-reader: never roll back the hash if extraction fails or times out.
+    if (row.sha256) {
+      await extractDocument({
+        userId,
+        evidenceId: row.id,
+        type: typeParsed.data,
+        sha256: row.sha256,
+        bytes,
+        mimeType: mime,
+      }).catch(() => undefined);
     }
     revalidatePath("/vault");
     revalidatePath(`/projects/${projectId}`);
@@ -127,6 +123,16 @@ export async function uploadAccountEvidenceAction(
       input: { type, name: file.name },
       output: { id: row.id, sha256: row.sha256 },
     });
+    if (row.sha256) {
+      await extractDocument({
+        userId,
+        evidenceId: row.id,
+        type,
+        sha256: row.sha256,
+        bytes,
+        mimeType: mime,
+      }).catch(() => undefined);
+    }
     revalidatePath("/vault");
     return { ok: true };
   } catch (error) {
