@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   Settings,
   Shield,
+  Sparkles,
   Wallet,
 } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
@@ -28,7 +29,7 @@ const LINKS = [
   { href: "/vault", label: "Vault", icon: Archive },
   { href: "/freeze-shield", label: "Freeze Shield", icon: Shield },
   { href: "/money", label: "Money", icon: Wallet },
-  // Copilot stays out of the nav until Phase 2 F6 ships a real page (placeholder removed).
+  { href: "/copilot", label: "Copilot", icon: Sparkles },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/onboarding", label: "Onboarding", icon: Compass },
 ] as const;

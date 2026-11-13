@@ -1,20 +1,26 @@
 /**
- * Purpose: Copilot chat shell.
- * Inputs: none yet.
- * Outputs: placeholder room.
+ * Purpose: Copilot room — vault-grounded Q&A with citations (Phase 2 F6).
+ * Inputs: signed-in session.
+ * Outputs: chat UI. Never invents evidence or calculates money.
  */
-import { Sparkles } from "lucide-react";
-import { PhasePlaceholder } from "@/components/phase-placeholder";
+import { PageHeader } from "@/components/brand/page-header";
+import { CopilotChat } from "@/components/copilot/chat";
+import { requireUserId } from "@/lib/auth/session";
 
-/** Copilot placeholder. */
-export default function CopilotPage() {
+/**
+ * Real Copilot page (placeholder removed).
+ */
+export default async function CopilotPage() {
+  await requireUserId();
+
   return (
-    <PhasePlaceholder
-      kicker="A second pair of eyes"
-      title="Copilot"
-      phase={6}
-      icon={<Sparkles className="size-6" strokeWidth={1.6} />}
-      description="A studio assistant over projects, evidence, payments, forecast, and plan. It never calculates money or invents proof."
-    />
+    <div>
+      <PageHeader
+        kicker="A second pair of eyes"
+        title="Copilot"
+        lede="Ask why something was flagged or what to upload next. Answers cite your vault and readiness rules only."
+      />
+      <CopilotChat />
+    </div>
   );
 }
