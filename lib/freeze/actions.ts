@@ -7,13 +7,24 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/auth/session";
+import { z } from "zod";
 import { pasteNoticeSchema, type FreezeFormState } from "@/lib/freeze/schemas";
+import { draftFollowUpPack } from "@/lib/freeze/reply-service";
 import {
   approvePack,
   exportPack,
   runFreezeShield,
   toFormState,
 } from "@/lib/freeze/service";
+
+const followUpSchema = z.object({
+  packId: z.string().uuid(),
+  followUp: z
+    .string()
+    .trim()
+    .min(20, "Paste the follow-up — a sentence or two at least.")
+    .max(8_000, "That follow-up is too long."),
+});
 
 const initialError = (message: string): FreezeFormState => ({ error: message });
 
@@ -57,6 +68,39 @@ export async function approvePackAction(
     return toFormState(pack);
   } catch (error) {
     return initialError(error instanceof Error ? error.message : "Could not approve this pack.");
+  }
+}
+
+/**
+ * F4: draft a reply to a PayPal follow-up from vault cites only.
+ */
+export async function followUpReplyAction(
+  _prev: FreezeFormState,
+  formData: FormData,
+): Promise<FreezeFormState> {
+  const userId = await requireUserId();
+  const parsed = followUpSchema.safeParse({
+    packId: formData.get("packId"),
+    followUp: formData.get("followUp"),
+  });
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Paste the follow-up first.",
+    };
+  }
+
+  try {
+    const pack = await draftFollowUpPack(
+      userId,
+      parsed.data.packId,
+      parsed.data.followUp,
+    );
+    revalidatePath("/freeze-shield");
+    return toFormState(pack);
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Could not draft that reply.",
+    };
   }
 }
 
