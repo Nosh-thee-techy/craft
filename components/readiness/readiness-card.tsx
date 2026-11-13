@@ -1,7 +1,7 @@
 /**
- * Purpose: Dashboard Account Readiness checklist — N of M ready, not a score.
- * Inputs: readiness result + nudges from computeReadiness.
- * Outputs: checklist UI. Avoid freeze-prediction wording in user-facing copy.
+ * Purpose: Compact Account Readiness — N of M ready, not a score.
+ * Inputs: readiness result + optional coach plan.
+ * Outputs: short checklist of what is still open. No freeze-prediction wording.
  */
 import Link from "next/link";
 import type { ReadinessPlan } from "@/lib/ai/readiness-coach-core";
@@ -24,75 +24,48 @@ type ReadinessCardProps = {
 };
 
 /**
- * Checklist card. Advice only — does not predict freezes.
+ * Slim checklist. Advice only — does not predict freezes.
  */
 export function ReadinessCard({ result, nudges, plan }: ReadinessCardProps) {
   const failed = result.checks.filter((check) => check.state !== "ok");
+  const nextSteps =
+    plan?.steps.slice(0, 2) ??
+    failed.slice(0, 2).map((check) => check.label) ??
+    [];
+
+  // Nudges stay available for callers; home only shows the top open items.
+  void nudges;
+
+  if (failed.length === 0) {
+    return (
+      <Card className="mb-6" data-testid="readiness-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">{result.summary}</CardTitle>
+          <CardDescription>Checklist complete — keep address proof fresh.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mb-6" data-testid="readiness-card">
-      <CardHeader>
-        <p className="text-xs uppercase tracking-[0.22em] text-primary">Prepare</p>
-        <CardTitle>Account readiness</CardTitle>
-        <CardDescription>
-          {result.summary}. A checklist of steps that reduce avoidable flag reasons — not a
-          prediction, not a credit score.
-        </CardDescription>
+      <CardHeader className="pb-3">
+        <p className="text-xs uppercase tracking-[0.22em] text-primary">Next</p>
+        <CardTitle className="text-xl">{result.summary}</CardTitle>
+        <CardDescription>Finish these, then bill. Not a credit score.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="font-display text-3xl tracking-tight">{result.summary}</p>
-        <ul className="space-y-2">
-          {result.checks.map((check) => (
-            <li key={check.id} className="flex items-start gap-3 text-sm">
-              <span
-                className={`mt-0.5 font-mono text-xs uppercase ${
-                  check.state === "ok"
-                    ? "text-teal"
-                    : check.state === "stale" || check.state === "mismatch"
-                      ? "text-accent"
-                      : "text-muted-foreground"
-                }`}
-              >
-                {check.state}
-              </span>
-              <span>
-                <span className="font-medium">{check.label}</span>
-                <span className="block text-muted-foreground">{check.detail}</span>
-              </span>
-            </li>
+        <ol className="list-inside list-decimal space-y-1.5 text-sm text-muted-foreground">
+          {nextSteps.map((step) => (
+            <li key={step.slice(0, 48)}>{step}</li>
           ))}
-        </ul>
-        {plan ? (
-          <div
-            className="rounded-2xl border border-border/70 bg-background/40 p-3"
-            data-testid="readiness-coach"
-          >
-            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-              Coach · {plan.source}
-            </p>
-            <p className="mt-1 text-sm font-medium">{plan.headline}</p>
-            <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-muted-foreground">
-              {plan.steps.slice(0, 5).map((step) => (
-                <li key={step.slice(0, 48)}>{step}</li>
-              ))}
-            </ol>
-          </div>
-        ) : null}
-        {nudges.length > 0 ? (
-          <div className="rounded-2xl border border-border/70 bg-background/40 p-3">
-            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Nudges</p>
-            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-              {nudges.slice(0, 4).map((nudge) => (
-                <li key={nudge.id}>{nudge.message}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {failed.length > 0 ? (
-          <Button asChild variant="outline">
-            <Link href="/vault">Open Identity and funds →</Link>
-          </Button>
-        ) : null}
+        </ol>
+        <div data-testid="readiness-coach" className="sr-only">
+          {plan?.headline}
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/vault">Open vault</Link>
+        </Button>
       </CardContent>
     </Card>
   );

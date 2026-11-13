@@ -70,12 +70,13 @@ const CUES = {
   },
   dashboard: {
     cue: "dashboard",
+    soft: true,
     title: "Studio home",
-    say: "This is your Layer 1 home: verified links, Work Proof Tokens, and a QR clients can scan. Bill only after they can verify you.",
+    say: "Do the next step on this page, then open Projects to bill.",
     steps: [
-      "Check verified link ownership and published proofs.",
-      "Share the QR or trust URL with a client.",
-      "Then open Projects to create a job and send a PayPal bill.",
+      "Finish the short readiness list if anything is open.",
+      "Share your verify QR when a client asks.",
+      "Bill from Projects.",
     ],
     cta: { label: "Bill a client", href: "/projects" },
   },

@@ -19,5 +19,7 @@ describe("guideForPath", () => {
     expect(guideForPath("/").soft).toBe(true);
     expect(guideForPath("/login").soft).toBe(true);
     expect(guideForPath("/onboarding").soft).toBe(true);
+    expect(guideForPath("/dashboard").soft).toBe(true);
   });
 });
+
