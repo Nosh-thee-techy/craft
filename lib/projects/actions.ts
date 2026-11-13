@@ -65,7 +65,16 @@ export async function sendInvoiceAction(
     await createAndSendInvoice(userId, projectId);
     revalidatePath(`/projects/${projectId}`);
     revalidatePath("/projects");
-    return { ok: true, flags };
+    return {
+      ok: true,
+      flags: flags.map((flag) => ({
+        code: flag.code,
+        severity: flag.severity,
+        reason: flag.reason,
+        sentence: flag.sentence,
+        attachFirst: flag.attachFirst,
+      })),
+    };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Could not send the invoice.",

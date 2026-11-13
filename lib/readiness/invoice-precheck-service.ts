@@ -5,19 +5,26 @@
  */
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
+import { completeJson } from "@/lib/ai/client";
+import {
+  explainInvoiceFlags,
+  type ExplainedFlag,
+} from "@/lib/ai/invoice-flag-explainer-core";
+import { logAgentAction } from "@/lib/ai/log";
 import { db } from "@/lib/db/client";
 import { evidenceItems, invoices, payments, projects, users } from "@/lib/db/schema";
 import { completenessFromTypes } from "@/lib/evidence/completeness";
-import { checkInvoice, type InvoiceFlag } from "@/lib/readiness/invoice-check";
+import { checkInvoice } from "@/lib/readiness/invoice-check";
 
 /**
- * Compute flags for the project's current amount / client vs account history.
+ * Compute flags for the project's current amount / client vs account history,
+ * then attach F7 one-sentence explanations (LLM cannot add/remove flags).
  */
 export async function precheckProjectInvoice(
   userId: string,
   projectId: string,
   opts?: { clientCountry?: string | null },
-): Promise<InvoiceFlag[]> {
+): Promise<ExplainedFlag[]> {
   const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
   if (!project || project.userId !== userId) {
     throw new Error("Project not found.");
@@ -47,7 +54,7 @@ export async function precheckProjectInvoice(
   const completeness = completenessFromTypes(types.map((row) => row.type));
   const hasContract = types.some((row) => row.type === "contract");
 
-  return checkInvoice({
+  const flags = checkInvoice({
     amount: Number(project.amount),
     clientCountry: opts?.clientCountry ?? null,
     sellerName: owner?.legalName ?? owner?.name,
@@ -60,4 +67,14 @@ export async function precheckProjectInvoice(
     projectCompletenessPercent: completeness.score,
     hasContractForClient: hasContract,
   });
+
+  const explained = await explainInvoiceFlags(flags, completeJson);
+  await logAgentAction({
+    userId,
+    action: "invoice.flag_explain",
+    input: { projectId, flagCount: flags.length },
+    output: { source: explained.source, codes: explained.flags.map((f) => f.code) },
+  });
+
+  return explained.flags;
 }

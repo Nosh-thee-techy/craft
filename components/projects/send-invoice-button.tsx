@@ -41,11 +41,16 @@ export function SendInvoiceButton({
           <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
             Pre-invoice check · advice only
           </p>
-          <ul className="space-y-1 text-sm text-muted-foreground">
+          <ul className="space-y-2 text-sm text-muted-foreground">
             {flags.map((flag) => (
               <li key={flag.code}>
                 <span className="font-mono text-xs uppercase text-accent">{flag.severity}</span>{" "}
-                {flag.reason}
+                {flag.sentence ?? flag.reason}
+                {flag.attachFirst ? (
+                  <span className="mt-0.5 block text-xs">
+                    Attach first: {flag.attachFirst}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

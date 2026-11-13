@@ -39,6 +39,10 @@ export type InvoiceFlagView = {
   code: string;
   severity: string;
   reason: string;
+  /** F7 one-sentence explanation (optional until explainer runs). */
+  sentence?: string;
+  /** F7 suggested first attachment. */
+  attachFirst?: string;
 };
 
 export type InvoiceActionState = {
