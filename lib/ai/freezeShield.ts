@@ -11,10 +11,10 @@ import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { completeJson, embedTexts, LlmNotConfiguredError } from "@/lib/ai/client";
 import { logAgentAction } from "@/lib/ai/log";
+import { understandNotice } from "@/lib/ai/notice-understanding-core";
 import { db } from "@/lib/db/client";
 import { docChunks, evidenceItems, projects } from "@/lib/db/schema";
 import { isAccountEvidenceType, type EvidenceType } from "@/lib/evidence/schemas";
-import { heuristicParse, parseDeadlineAt } from "@/lib/freeze/parse-heuristic";
 import {
   mappingSchema,
   parsedNoticeSchema,
@@ -30,44 +30,24 @@ import {
 export { heuristicParse } from "@/lib/freeze/parse-heuristic";
 
 /**
- * Parse a pasted PayPal notice into requests.
+ * Parse a pasted PayPal notice into requests (Phase 2 F2).
  *
- * F4 (traced): LLM `completeJson` is the primary path when configured.
- * `heuristicParse` always runs first as a seed and becomes the result if the
- * LLM is missing, times out, or returns invalid JSON — never the other way around.
+ * LLM `completeJson` is primary when configured; `heuristicParse` is the
+ * deterministic fallback on missing key, timeout, or invalid JSON.
+ * Both paths validate with `parsedNoticeSchema`.
  */
 export async function parseLimitationNotice(
   userId: string,
   rawText: string,
 ): Promise<ParsedNotice> {
-  const heuristic = heuristicParse(rawText);
-  let parsed = heuristic;
-
-  try {
-    parsed = await completeJson({
-      system:
-        "You extract what PayPal asked a seller to send. Use only the pasted notice. Map each request to exactly one of: contract, invoice, payment, deliverable, comms, portfolio_link, id_document, address_proof, bank_statement, source_of_funds, employment_proof. Use id_document/address_proof/bank_statement/source_of_funds/employment_proof for Kenya-style KYC asks (utility bill, ID, bank statement, source of funds, employment). Never invent a request that is not in the notice. Never invent files. Also set deadlineAt to YYYY-MM-DD when the notice has a clear date, else null.",
-      user: rawText.slice(0, 12_000),
-      schema: parsedNoticeSchema,
-    });
-  } catch {
-    parsed = heuristic;
-  }
-
-  // Ensure deadlineAt is always filled when the free-text deadline is parseable.
-  if (!parsed.deadlineAt && parsed.deadline) {
-    const date = parseDeadlineAt(parsed.deadline);
-    parsed = {
-      ...parsed,
-      deadlineAt: date ? date.toISOString().slice(0, 10) : null,
-    };
-  }
+  const { parsed, source } = await understandNotice(rawText, completeJson);
 
   await logAgentAction({
     userId,
     action: "freeze.parse",
     input: { chars: rawText.length },
     output: {
+      source,
       requestCount: parsed.requests.length,
       tone: parsed.tone,
       deadline: parsed.deadline,

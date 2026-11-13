@@ -26,7 +26,7 @@ Kenyan creatives stabilize a verified studio profile with Work Proof Tokens, let
 - HMAC-signed downloads, checklist completeness **in code** (LLM never scores)
 - Optional LLM reader/auditor when `LLM_API_KEY` is set
 - AI only reads uploads — never creates or invents evidence
-- **Phase 2 Kenya (in progress on `phase-2/kenya-prepare-prove-respond`):** P0 → PA → PB → PE → PC → PD → **F1 doc-reader** done. Still open: F2–F7 AI layer, eval expansion, demo polish.
+- **Phase 2 Kenya (in progress on `phase-2/kenya-prepare-prove-respond`):** P0 → PA → PB → PE → PC → PD → F1 → **F2 notice understanding** done. Still open: F3–F7 AI layer, eval expansion, demo polish.
 
 ### Phase 3 — Freeze Shield
 - Paste PayPal limitation notice → parse → map to vault → draft letter
