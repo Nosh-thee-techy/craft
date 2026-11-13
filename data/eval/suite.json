@@ -8,6 +8,47 @@
     "expectTypes": ["invoice", "payment", "contract", "deliverable", "comms", "portfolio_link", "id_document"]
   },
   {
+    "id": "notice-kenya-restriction",
+    "kind": "notice_parse",
+    "description": "Kenya-style restriction asking for national ID, utility bill, bank statement, and source of funds.",
+    "notice": "PayPal has limited your account. Provide by 20 June 2026: national ID, proof of address, recent bank statement, and source of funds for overseas clients.",
+    "expectTone": "restriction",
+    "expectTypes": ["id_document", "address_proof", "bank_statement", "source_of_funds"]
+  },
+  {
+    "id": "freshness-stale-bill-91",
+    "kind": "freshness",
+    "description": "Utility bill at 91 days is stale under the 90-day reported rule.",
+    "docDate": "2026-08-14",
+    "today": "2026-11-13",
+    "maxAgeDays": 90,
+    "expectStale": true
+  },
+  {
+    "id": "address-mismatch-estates",
+    "kind": "address_match",
+    "description": "Different Nairobi estates must not match.",
+    "left": "Kilimani, Nairobi",
+    "right": "Eastleigh, Nairobi",
+    "expectMatch": false
+  },
+  {
+    "id": "verifier-fabricated-utility",
+    "kind": "verifier",
+    "description": "Second fabricated claim — invented utility bill hash must fail closed.",
+    "letter": "Attached kenya-power-fake.pdf (sha256: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd) as proof of address.",
+    "sources": [
+      {
+        "fileName": "real-utility.txt",
+        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "type": "address_proof",
+        "text": "Kenya Power bill for Kilimani. Amount redacted."
+      }
+    ],
+    "expectPassed": false,
+    "expectFailedSubstring": "kenya-power-fake.pdf"
+  },
+  {
     "id": "notice-invoice-only",
     "kind": "notice_parse",
     "description": "Short notice asking only for an invoice.",

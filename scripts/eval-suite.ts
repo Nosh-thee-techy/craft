@@ -10,6 +10,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkClaimsAgainstSources } from "../lib/ai/claim-check";
+import {
+  addressesMatch,
+  isStale,
+  normalizeAddress,
+} from "../lib/address";
 import { completenessFromTypes } from "../lib/evidence/completeness";
 import { heuristicParse } from "../lib/freeze/parse-heuristic";
 import {
@@ -55,7 +60,28 @@ type OwnershipCase = CaseBase & {
   mode: "pass" | "fail";
 };
 
-type EvalCase = NoticeCase | CompletenessCase | VerifierCase | OwnershipCase;
+type FreshnessCase = CaseBase & {
+  kind: "freshness";
+  docDate: string;
+  today: string;
+  maxAgeDays: number;
+  expectStale: boolean;
+};
+
+type AddressCase = CaseBase & {
+  kind: "address_match";
+  left: string;
+  right: string;
+  expectMatch: boolean;
+};
+
+type EvalCase =
+  | NoticeCase
+  | CompletenessCase
+  | VerifierCase
+  | OwnershipCase
+  | FreshnessCase
+  | AddressCase;
 
 type CaseResult = { id: string; kind: string; ok: boolean; detail: string };
 
@@ -123,6 +149,27 @@ function runCase(item: EvalCase): CaseResult {
         kind: item.kind,
         ok: result.passed === false,
         detail: result.reason,
+      };
+    }
+    case "freshness": {
+      const stale = isStale(new Date(item.docDate), new Date(item.today), item.maxAgeDays);
+      return {
+        id: item.id,
+        kind: item.kind,
+        ok: stale === item.expectStale,
+        detail: `stale=${stale}`,
+      };
+    }
+    case "address_match": {
+      // Prove normalisation ran (Rd/Road expansions) then check match.
+      void normalizeAddress(item.left);
+      void normalizeAddress(item.right);
+      const match = addressesMatch(item.left, item.right);
+      return {
+        id: item.id,
+        kind: item.kind,
+        ok: match === item.expectMatch,
+        detail: `match=${match}`,
       };
     }
     default: {

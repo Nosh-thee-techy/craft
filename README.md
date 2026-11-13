@@ -103,17 +103,31 @@ Set `LLM_API_KEY` (and optional `LLM_MODEL`, `LLM_BASE_URL`) to enable vision/JS
 
 The AI only reads uploaded bytes. It cannot create evidence rows.
 
+Phase 2 Kenya AI layer (F1–F7), each with a mocked-model test and a deterministic fallback when the LLM is off:
+
+| Feature | What |
+| --- | --- |
+| F1 Document reader | Extract fields → user confirms before readiness uses them |
+| F2 Notice understanding | LLM parse with heuristic fallback |
+| F3 Pack reviewer | Second-pass gaps that must cite missing requests |
+| F4 Reply assistant | Follow-up draft → same verifier + approve gate |
+| F5 Readiness coach | Plan from failed checks only (dashboard) |
+| F6 Copilot | Vault/rules Q&A with citations; “I don't know” if empty |
+| F7 Flag explainer | One sentence per pre-invoice flag (cannot add/remove flags) |
+
 ## Freeze Shield (Phase 3)
 
 Open `/freeze-shield` when PayPal limits an account. Paste the notice (a sample lives at `data/eval/paypal-limitation-notice.txt`). CRAFT:
 
 1. Parses the ask (heuristic without an LLM key; LLM may refine)
 2. Maps each request onto vault files by type, keywords, and optional pgvector neighbours
-3. Drafts a cover letter that cites only uploaded filenames and SHA-256 hashes
-4. Runs the fail-closed verifier (`lib/ai/claim-check.ts` + `lib/ai/verifier.ts`) — fabricated files/hashes block export
-5. Requires human approval, then builds a PDF pack (`lib/pdf/pack.ts`) into the private vault
+3. Runs a pack reviewer (F3) listing still-missing asks with citations
+4. Drafts a cover letter that cites only uploaded filenames and SHA-256 hashes
+5. Runs the fail-closed verifier (`lib/ai/claim-check.ts` + `lib/ai/verifier.ts`) — fabricated files/hashes block export
+6. Requires human approval, then builds a PDF + ZIP pack into the private vault
+7. Optional follow-up reply (F4) uses the same verifier and approve gate
 
-Identity documents PayPal may request stay **missing** on purpose — CRAFT does not store them. Money is never calculated in this flow.
+Identity and funds documents map when uploaded under Vault → Identity; money is never calculated in this flow.
 
 ```bash
 npm run eval:freeze
@@ -181,7 +195,7 @@ Schema migration `drizzle/0003_phase6_money_inputs.sql` is additive only. Determ
 | `lib/planner/simulate.ts` | Educational investing **range** (not a promised return) |
 | `lib/money/build-view.ts` + `service.ts` | Compose the Money view; `/money` UI |
 
-Open `/money` after seed to see score, forecast, plan, splits, and the investing range. Copilot / LLM explain layer still optional.
+Open `/money` after seed to see score, forecast, plan, splits, and the investing range. Open `/copilot` for vault-grounded Q&A (citations only; never invents proof or calculates money).
 
 ```bash
 npm test
@@ -269,7 +283,8 @@ See `.env.example`. Never commit secrets. Only PayPal **sandbox** keys belong in
 | --- | --- |
 | Auth, projects, PayPal sandbox invoice + webhook fund | Live PayPal limitation emails (paste a sample instead) |
 | Evidence Vault hashes, timestamps, signed downloads | M-Pesa rails |
-| Freeze Shield parse → verify → approve → PDF | Copilot / LLM explain over Money numbers (optional) |
+| Freeze Shield parse → review → verify → approve → PDF/ZIP | LLM explain of Money *calculations* (amounts stay in code) |
+| Copilot over vault + readiness rules with citations | |
 | Delivery confirm + public trust page | Brokerage / real investing execution |
 | Verified link ownership (not identity) | |
 | Income stability and trust score (code only) | |
