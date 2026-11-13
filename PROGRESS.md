@@ -42,7 +42,7 @@ Kenyan creatives stabilize a verified studio profile with Work Proof Tokens, let
 - Public trust page at `/t/[slug]` with visibility controls
 
 ### Phase 5 — Onboarding + verified link ownership
-- Four-beat onboarding (You → Prove → Stage → Go) — same fields, less ceremony; verified link ownership wording intact
+- Three-beat onboarding (You → Prove → Run) — same fields, less ceremony; verified link ownership wording intact
 - Challenge codes for GitHub / YouTube / RSS / export
 - Wording: **verified link ownership** — never “verified identity”
 - Split rules must total 100% (computed in code)
