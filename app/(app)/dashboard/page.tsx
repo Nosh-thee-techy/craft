@@ -26,7 +26,11 @@ export default async function DashboardPage() {
         title={`Hey ${firstName}.`}
         lede="Layer 1: stabilize your profile and Work Proof Tokens, let clients scan to verify, then bill and deliver."
       />
-      <ReadinessCard result={readiness.result} nudges={readiness.nudges} />
+      <ReadinessCard
+        result={readiness.result}
+        nudges={readiness.nudges}
+        plan={readiness.plan}
+      />
       <ProfileBoard profile={profile} />
     </div>
   );

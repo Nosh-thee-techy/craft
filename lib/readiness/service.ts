@@ -5,6 +5,9 @@
  */
 import "server-only";
 import { and, count, eq } from "drizzle-orm";
+import { completeJson } from "@/lib/ai/client";
+import { logAgentAction } from "@/lib/ai/log";
+import { coachReadiness, type ReadinessPlan } from "@/lib/ai/readiness-coach-core";
 import { db } from "@/lib/db/client";
 import {
   evidenceItems,
@@ -20,6 +23,8 @@ import type { ReadinessEvidence, ReadinessResult } from "@/lib/readiness/types";
 export type ReadinessView = {
   result: ReadinessResult;
   nudges: Nudge[];
+  /** F5 coach plan — wording only; facts from computeReadiness. */
+  plan: ReadinessPlan;
 };
 
 /**
@@ -29,7 +34,8 @@ export async function getReadinessForUser(userId: string): Promise<ReadinessView
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) {
     const empty = computeReadiness({ profile: {}, evidence: [] });
-    return { result: empty, nudges: readinessNudges(empty, []) };
+    const plan = await coachReadiness(empty);
+    return { result: empty, nudges: readinessNudges(empty, []), plan };
   }
 
   const [linkCount] = await db
@@ -79,8 +85,17 @@ export async function getReadinessForUser(userId: string): Promise<ReadinessView
     invoices: ownedInvoices,
   });
 
+  const plan = await coachReadiness(result, completeJson);
+  await logAgentAction({
+    userId,
+    action: "readiness.coach",
+    input: { ready: result.readyCount, total: result.totalCount },
+    output: { source: plan.source, steps: plan.steps.length },
+  });
+
   return {
     result,
     nudges: readinessNudges(result, evidence),
+    plan,
   };
 }
