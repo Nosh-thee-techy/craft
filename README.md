@@ -61,7 +61,7 @@ Login and signup are a split studio door: a Nairobi photographer at work on one 
 - **Evidence Vault:** private upload, SHA-256, server timestamp, signed download, checklist score (in code), optional LLM reader/auditor
 - **Freeze Shield (Phase 3):** paste a PayPal limitation notice → map to vault → draft letter → fail-closed verifier → approve → PDF pack
 - **Delivery + trust (Phase 4):** mark a project delivered, AI match-check vs the brief, client confirm at `/c/[token]`, public trust page at `/t/[slug]`
-- **Onboarding (Phase 5):** four-beat setup (You → Prove → Stage → Go) with verified link ownership (GitHub / YouTube / RSS / export), optional AI profile draft, split rules, visibility
+- **Onboarding (Phase 5):** three-beat setup (You → Prove → Run) with verified link ownership (GitHub / YouTube / RSS / export), optional AI profile draft, split rules, visibility
 - **Money (Phase 6):** score, cash-flow band, planner + educational investing range, split proposals on payment (approve/reject), live `/money` UI
 - **Layer 1 (work security):** studio profile home, Work Proof Tokens (hash certificates), scan-to-verify QR on `/t/[slug]`, client verify card before billing
 - **Rehema (studio guide):** Kabla-style bottom-right helper that explains each room once per session, then collapses to “Ask Rehema”
